@@ -82,4 +82,12 @@ export const dashboardAPI = {
   },
 };
 
+// Plate Scanning API
+export const scanAPI = {
+  scanPlate: async (imageBase64: string): Promise<{ registration: string | null; success: boolean; message: string }> => {
+    const response = await api.post('/scan-plate', { image_base64: imageBase64 });
+    return response.data;
+  },
+};
+
 export default api;
