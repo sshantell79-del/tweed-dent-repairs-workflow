@@ -89,6 +89,75 @@ export default function AddJobScreen() {
     }
   };
 
+  // Scan registration plate from photo
+  const scanPlate = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Please grant camera permissions to scan plates');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.7,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0].base64) {
+      setScanning(true);
+      try {
+        const response = await scanAPI.scanPlate(result.assets[0].base64);
+        if (response.success && response.registration) {
+          setRegistration(response.registration);
+          Alert.alert('Success', `Registration detected: ${response.registration}`);
+        } else {
+          Alert.alert('Scan Failed', response.message || 'Could not read registration plate. Please try again or enter manually.');
+        }
+      } catch (error: any) {
+        console.error('Plate scan error:', error);
+        Alert.alert('Error', 'Failed to scan plate. Please try again or enter manually.');
+      } finally {
+        setScanning(false);
+      }
+    }
+  };
+
+  // Scan plate from gallery
+  const scanPlateFromGallery = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Please grant gallery permissions');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.7,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0].base64) {
+      setScanning(true);
+      try {
+        const response = await scanAPI.scanPlate(result.assets[0].base64);
+        if (response.success && response.registration) {
+          setRegistration(response.registration);
+          Alert.alert('Success', `Registration detected: ${response.registration}`);
+        } else {
+          Alert.alert('Scan Failed', response.message || 'Could not read registration plate. Please try again or enter manually.');
+        }
+      } catch (error: any) {
+        console.error('Plate scan error:', error);
+        Alert.alert('Error', 'Failed to scan plate. Please try again or enter manually.');
+      } finally {
+        setScanning(false);
+      }
+    }
+  };
+
   const removePhoto = (index: number) => {
     setPhotos(photos.filter((_, i) => i !== index));
   };
