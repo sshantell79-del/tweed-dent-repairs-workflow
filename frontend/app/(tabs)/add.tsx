@@ -15,11 +15,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { jobsAPI } from '../../src/services/api';
+import { jobsAPI, scanAPI } from '../../src/services/api';
 
 export default function AddJobScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const [activeSection, setActiveSection] = useState(0);
 
   // Car Info
