@@ -273,6 +273,8 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 async def get_jobs(
     status: Optional[str] = None,
     search: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
     current_user: dict = Depends(get_current_user)
 ):
     query = {}
