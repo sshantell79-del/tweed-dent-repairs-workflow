@@ -13,6 +13,7 @@ from datetime import datetime, timedelta
 import jwt
 import bcrypt
 from bson import ObjectId
+import re
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
