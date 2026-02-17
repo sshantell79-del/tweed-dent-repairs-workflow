@@ -543,14 +543,19 @@ class PlateScanRequest(BaseModel):
 
 class PlateScanResponse(BaseModel):
     registration: Optional[str] = None
+    make: Optional[str] = None
+    model: Optional[str] = None
+    color: Optional[str] = None
+    year: Optional[int] = None
     success: bool
     message: str
 
 @api_router.post("/scan-plate", response_model=PlateScanResponse)
 async def scan_plate(request: PlateScanRequest, current_user: dict = Depends(get_current_user)):
-    """Scan a registration plate image and extract the plate number using AI vision."""
+    """Scan a registration plate image and extract plate number + vehicle details using AI vision."""
     try:
         from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+        import json
         
         emergent_key = os.environ.get('EMERGENT_LLM_KEY')
         if not emergent_key:
@@ -560,21 +565,31 @@ async def scan_plate(request: PlateScanRequest, current_user: dict = Depends(get
         chat = LlmChat(
             api_key=emergent_key,
             session_id=f"plate-scan-{uuid.uuid4()}",
-            system_message="""You are a registration plate reader. Your task is to extract the registration/license plate number from vehicle images.
+            system_message="""You are an expert vehicle identification system. Your task is to analyze vehicle images and extract:
+1. The registration/license plate number
+2. The vehicle make (manufacturer)
+3. The vehicle model
+4. The vehicle color
+5. The approximate year (based on model generation)
 
-IMPORTANT RULES:
-1. Look for the registration plate in the image
-2. Extract ONLY the alphanumeric characters on the plate
-3. Remove any spaces, dashes, or special characters
-4. Return ONLY the plate number in uppercase, nothing else
-5. If you cannot find or read a plate, respond with exactly: NO_PLATE_FOUND
-6. Do not include any explanation, just the plate number or NO_PLATE_FOUND
+You MUST respond with ONLY a valid JSON object in this exact format, no other text:
+{
+    "plate": "ABC123",
+    "make": "Toyota",
+    "model": "Camry",
+    "color": "Silver",
+    "year": 2020
+}
 
-Examples of valid responses:
-- ABC123
-- 1XYZ987
-- DEMO999
-- NO_PLATE_FOUND"""
+RULES:
+- For "plate": Extract alphanumeric characters only, uppercase, no spaces/dashes. Use null if not visible.
+- For "make": The manufacturer brand (Toyota, Ford, Holden, Mazda, etc). Use null if uncertain.
+- For "model": The specific model name (Camry, Ranger, Commodore, CX-5, etc). Use null if uncertain.
+- For "color": The main body color in simple terms (Silver, White, Black, Red, Blue, Grey, etc). Use null if not visible.
+- For "year": Your best estimate of the manufacturing year based on the model generation. Use null if very uncertain.
+
+Be confident in your guesses based on visual features like grille design, headlight shape, body style, badges, and emblems.
+ONLY output the JSON object, nothing else."""
         )
         
         # Use GPT-4 Vision for image analysis
@@ -587,36 +602,107 @@ Examples of valid responses:
         
         # Create message with image
         user_message = UserMessage(
-            text="Extract the vehicle registration plate number from this image. Return ONLY the plate number in uppercase with no spaces, or NO_PLATE_FOUND if you cannot read it.",
+            text="Analyze this vehicle image. Extract the registration plate number and identify the vehicle make, model, color, and approximate year. Respond with ONLY a JSON object.",
             file_contents=[image_content]
         )
         
         # Send message and get response
         response = await chat.send_message(user_message)
         
-        # Clean up the response
-        plate_number = response.strip().upper()
+        # Parse the JSON response
+        try:
+            # Clean up response - remove markdown code blocks if present
+            clean_response = response.strip()
+            if clean_response.startswith("```"):
+                clean_response = clean_response.split("```")[1]
+                if clean_response.startswith("json"):
+                    clean_response = clean_response[4:]
+                clean_response = clean_response.strip()
+            
+            data = json.loads(clean_response)
+        except json.JSONDecodeError:
+            # Fallback: try to extract plate number the old way
+            plate_number = response.strip().upper()
+            plate_number = re.sub(r'[^A-Z0-9]', '', plate_number)
+            
+            if len(plate_number) >= 2 and len(plate_number) <= 10:
+                return PlateScanResponse(
+                    registration=plate_number,
+                    make=None,
+                    model=None,
+                    color=None,
+                    year=None,
+                    success=True,
+                    message=f"Registration detected: {plate_number}. Could not identify vehicle details."
+                )
+            else:
+                return PlateScanResponse(
+                    registration=None,
+                    make=None,
+                    model=None,
+                    color=None,
+                    year=None,
+                    success=False,
+                    message="Could not analyze the image. Please try again with a clearer photo."
+                )
         
-        # Remove any common prefixes/suffixes the AI might add
-        plate_number = plate_number.replace("PLATE:", "").replace("NUMBER:", "").strip()
+        # Extract and clean plate number
+        plate_number = data.get("plate")
+        if plate_number:
+            plate_number = re.sub(r'[^A-Z0-9]', '', str(plate_number).upper())
+            if len(plate_number) < 2 or len(plate_number) > 10:
+                plate_number = None
         
-        # Check if plate was found
-        if plate_number == "NO_PLATE_FOUND" or not plate_number:
+        # Extract vehicle details
+        make = data.get("make")
+        model = data.get("model")
+        color = data.get("color")
+        year = data.get("year")
+        
+        # Validate year
+        if year:
+            try:
+                year = int(year)
+                if year < 1900 or year > 2026:
+                    year = None
+            except (ValueError, TypeError):
+                year = None
+        
+        # Build response message
+        details_found = []
+        if plate_number:
+            details_found.append(f"Rego: {plate_number}")
+        if make and model:
+            details_found.append(f"{make} {model}")
+        elif make:
+            details_found.append(make)
+        if year:
+            details_found.append(str(year))
+        if color:
+            details_found.append(color)
+        
+        if not plate_number and not make:
             return PlateScanResponse(
                 registration=None,
+                make=None,
+                model=None,
+                color=None,
+                year=None,
                 success=False,
-                message="Could not read registration plate from image. Please try again with a clearer photo."
+                message="Could not identify the vehicle or read the plate. Please try again with a clearer photo."
             )
         
-        # Clean up - keep only alphanumeric characters
-        plate_number = re.sub(r'[^A-Z0-9]', '', plate_number)
+        logger.info(f"Vehicle scan successful: {details_found}")
         
-        if len(plate_number) < 2 or len(plate_number) > 10:
-            return PlateScanResponse(
-                registration=None,
-                success=False,
-                message="Invalid plate format detected. Please try again."
-            )
+        return PlateScanResponse(
+            registration=plate_number,
+            make=make,
+            model=model,
+            color=color,
+            year=year,
+            success=True,
+            message=f"Detected: {', '.join(details_found)}"
+        )
         
         logger.info(f"Plate scanned successfully: {plate_number}")
         
