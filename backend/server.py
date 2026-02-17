@@ -533,6 +533,106 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
 async def get_statuses():
     return {"statuses": JOB_STATUSES}
 
+# ==================== PLATE SCANNING ====================
+
+class PlateScanRequest(BaseModel):
+    image_base64: str
+
+class PlateScanResponse(BaseModel):
+    registration: Optional[str] = None
+    success: bool
+    message: str
+
+@api_router.post("/scan-plate", response_model=PlateScanResponse)
+async def scan_plate(request: PlateScanRequest, current_user: dict = Depends(get_current_user)):
+    """Scan a registration plate image and extract the plate number using AI vision."""
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+        
+        emergent_key = os.environ.get('EMERGENT_LLM_KEY')
+        if not emergent_key:
+            raise HTTPException(status_code=500, detail="LLM API key not configured")
+        
+        # Initialize the chat with vision model
+        chat = LlmChat(
+            api_key=emergent_key,
+            session_id=f"plate-scan-{uuid.uuid4()}",
+            system_message="""You are a registration plate reader. Your task is to extract the registration/license plate number from vehicle images.
+
+IMPORTANT RULES:
+1. Look for the registration plate in the image
+2. Extract ONLY the alphanumeric characters on the plate
+3. Remove any spaces, dashes, or special characters
+4. Return ONLY the plate number in uppercase, nothing else
+5. If you cannot find or read a plate, respond with exactly: NO_PLATE_FOUND
+6. Do not include any explanation, just the plate number or NO_PLATE_FOUND
+
+Examples of valid responses:
+- ABC123
+- 1XYZ987
+- DEMO999
+- NO_PLATE_FOUND"""
+        )
+        
+        # Use GPT-4 Vision for image analysis
+        chat.with_model("openai", "gpt-4o")
+        
+        # Create image content from base64
+        image_content = ImageContent(
+            image_base64=request.image_base64
+        )
+        
+        # Create message with image
+        user_message = UserMessage(
+            text="Extract the vehicle registration plate number from this image. Return ONLY the plate number in uppercase with no spaces, or NO_PLATE_FOUND if you cannot read it.",
+            file_contents=[image_content]
+        )
+        
+        # Send message and get response
+        response = await chat.send_message(user_message)
+        
+        # Clean up the response
+        plate_number = response.strip().upper()
+        
+        # Remove any common prefixes/suffixes the AI might add
+        plate_number = plate_number.replace("PLATE:", "").replace("NUMBER:", "").strip()
+        
+        # Check if plate was found
+        if plate_number == "NO_PLATE_FOUND" or not plate_number:
+            return PlateScanResponse(
+                registration=None,
+                success=False,
+                message="Could not read registration plate from image. Please try again with a clearer photo."
+            )
+        
+        # Clean up - keep only alphanumeric characters
+        plate_number = re.sub(r'[^A-Z0-9]', '', plate_number)
+        
+        if len(plate_number) < 2 or len(plate_number) > 10:
+            return PlateScanResponse(
+                registration=None,
+                success=False,
+                message="Invalid plate format detected. Please try again."
+            )
+        
+        logger.info(f"Plate scanned successfully: {plate_number}")
+        
+        return PlateScanResponse(
+            registration=plate_number,
+            success=True,
+            message=f"Registration plate detected: {plate_number}"
+        )
+        
+    except ImportError:
+        raise HTTPException(status_code=500, detail="Vision integration not available")
+    except Exception as e:
+        logger.error(f"Plate scan error: {str(e)}")
+        return PlateScanResponse(
+            registration=None,
+            success=False,
+            message=f"Error scanning plate: {str(e)}"
+        )
+
 # Root endpoint
 @api_router.get("/")
 async def root():
