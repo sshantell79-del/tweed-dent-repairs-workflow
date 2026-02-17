@@ -604,9 +604,51 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1F2937',
   },
+  inputFilled: {
+    borderColor: '#10B981',
+    backgroundColor: '#F0FDF4',
+  },
   textArea: {
     minHeight: 80,
     textAlignVertical: 'top',
+  },
+  scanPlateContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+  },
+  scanPlateButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#3B82F6',
+    borderRadius: 12,
+    paddingVertical: 14,
+    gap: 8,
+  },
+  scanPlateButtonSecondary: {
+    width: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#EFF6FF',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#3B82F6',
+  },
+  scanPlateButtonDisabled: {
+    opacity: 0.6,
+  },
+  scanPlateButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  scanningText: {
+    fontSize: 13,
+    color: '#3B82F6',
+    textAlign: 'center',
+    marginBottom: 12,
   },
   photoButtons: {
     flexDirection: 'row',
