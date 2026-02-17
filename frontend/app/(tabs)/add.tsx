@@ -108,15 +108,21 @@ export default function AddJobScreen() {
       setScanning(true);
       try {
         const response = await scanAPI.scanPlate(result.assets[0].base64);
-        if (response.success && response.registration) {
-          setRegistration(response.registration);
-          Alert.alert('Success', `Registration detected: ${response.registration}`);
+        if (response.success) {
+          // Auto-fill all detected fields
+          if (response.registration) setRegistration(response.registration);
+          if (response.make) setMake(response.make);
+          if (response.model) setModel(response.model);
+          if (response.color) setColor(response.color);
+          if (response.year) setYear(response.year.toString());
+          
+          Alert.alert('Vehicle Detected!', response.message);
         } else {
-          Alert.alert('Scan Failed', response.message || 'Could not read registration plate. Please try again or enter manually.');
+          Alert.alert('Scan Failed', response.message || 'Could not identify the vehicle. Please try again or enter manually.');
         }
       } catch (error: any) {
         console.error('Plate scan error:', error);
-        Alert.alert('Error', 'Failed to scan plate. Please try again or enter manually.');
+        Alert.alert('Error', 'Failed to scan vehicle. Please try again or enter manually.');
       } finally {
         setScanning(false);
       }
