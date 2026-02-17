@@ -277,11 +277,11 @@ export default function AddJobScreen() {
                   disabled={scanning}
                 >
                   {scanning ? (
-                    <ActivityIndicator color="#FFFFFF\" size="small" />
+                    <ActivityIndicator color="#FFFFFF" size="small" />
                   ) : (
                     <>
                       <Ionicons name="scan" size={20} color="#FFFFFF" />
-                      <Text style={styles.scanPlateButtonText}>Scan Plate</Text>
+                      <Text style={styles.scanPlateButtonText}>Scan Vehicle</Text>
                     </>
                   )}
                 </TouchableOpacity>
@@ -294,7 +294,7 @@ export default function AddJobScreen() {
                 </TouchableOpacity>
               </View>
               {scanning && (
-                <Text style={styles.scanningText}>Scanning plate... This may take a few seconds</Text>
+                <Text style={styles.scanningText}>AI analyzing vehicle... This may take a few seconds</Text>
               )}
 
               <View style={styles.row}>
