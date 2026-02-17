@@ -289,7 +289,11 @@ async def get_jobs(
             {"owner_info.phone": {"$regex": search, "$options": "i"}}
         ]
     
-    jobs = await db.jobs.find(query).sort("created_at", -1).to_list(1000)
+    # Apply pagination
+    skip_count = skip if skip else 0
+    limit_count = limit if limit else 100
+    
+    jobs = await db.jobs.find(query).sort("created_at", -1).skip(skip_count).limit(limit_count).to_list(limit_count)
     
     result = []
     for job in jobs:
