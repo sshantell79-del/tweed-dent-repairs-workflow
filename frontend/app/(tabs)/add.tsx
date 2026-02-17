@@ -256,6 +256,35 @@ export default function AddJobScreen() {
           {activeSection === 0 && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Vehicle Information</Text>
+              
+              {/* Scan Plate Button */}
+              <View style={styles.scanPlateContainer}>
+                <TouchableOpacity 
+                  style={[styles.scanPlateButton, scanning && styles.scanPlateButtonDisabled]} 
+                  onPress={scanPlate}
+                  disabled={scanning}
+                >
+                  {scanning ? (
+                    <ActivityIndicator color="#FFFFFF\" size="small" />
+                  ) : (
+                    <>
+                      <Ionicons name="scan" size={20} color="#FFFFFF" />
+                      <Text style={styles.scanPlateButtonText}>Scan Plate</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.scanPlateButtonSecondary, scanning && styles.scanPlateButtonDisabled]} 
+                  onPress={scanPlateFromGallery}
+                  disabled={scanning}
+                >
+                  <Ionicons name="images-outline" size={20} color="#3B82F6" />
+                </TouchableOpacity>
+              </View>
+              {scanning && (
+                <Text style={styles.scanningText}>Scanning plate... This may take a few seconds</Text>
+              )}
+
               <View style={styles.row}>
                 <View style={styles.halfInput}>
                   <Text style={styles.label}>Make *</Text>
@@ -290,7 +319,7 @@ export default function AddJobScreen() {
                 <View style={styles.halfInput}>
                   <Text style={styles.label}>Registration *</Text>
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, registration && styles.inputFilled]}
                     placeholder="ABC123"
                     value={registration}
                     onChangeText={setRegistration}
