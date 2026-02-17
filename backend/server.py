@@ -704,20 +704,16 @@ ONLY output the JSON object, nothing else."""
             message=f"Detected: {', '.join(details_found)}"
         )
         
-        logger.info(f"Plate scanned successfully: {plate_number}")
-        
-        return PlateScanResponse(
-            registration=plate_number,
-            success=True,
-            message=f"Registration plate detected: {plate_number}"
-        )
-        
     except ImportError:
         raise HTTPException(status_code=500, detail="Vision integration not available")
     except Exception as e:
         logger.error(f"Plate scan error: {str(e)}")
         return PlateScanResponse(
             registration=None,
+            make=None,
+            model=None,
+            color=None,
+            year=None,
             success=False,
             message=f"Error scanning plate: {str(e)}"
         )
