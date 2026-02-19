@@ -76,6 +76,8 @@ export interface DashboardStats {
   status_breakdown: { [key: string]: number };
   total_estimated_revenue: number;
   total_actual_revenue: number;
+  pending_revenue: number;
+  completed_revenue: number;
 }
 
 export const JOB_STATUSES = [
