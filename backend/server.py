@@ -308,9 +308,9 @@ async def create_job(job_data: JobCreate, current_user: dict = Depends(get_curre
     
     job_doc = {
         "car_info": job_data.car_info.dict(),
-        "owner_info": job_data.owner_info.dict(),
+        "owner_info": job_data.owner_info.dict() if job_data.owner_info else None,
         "insurance_info": job_data.insurance_info.dict() if job_data.insurance_info else None,
-        "damage_description": job_data.damage_description,
+        "damage_description": job_data.damage_description or "To be assessed",
         "status": "Received",
         "photos": [],
         "estimated_cost": job_data.estimated_cost,
