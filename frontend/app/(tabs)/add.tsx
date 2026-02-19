@@ -554,6 +554,24 @@ export default function AddJobScreen() {
           )}
 
           <View style={styles.buttonContainer}>
+            {/* Quick Create - only requires vehicle info */}
+            {(make && model && year && registration) && !ownerName && (
+              <TouchableOpacity
+                style={[styles.quickCreateButton, loading && styles.submitButtonDisabled]}
+                onPress={handleQuickCreate}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#10B981" />
+                ) : (
+                  <>
+                    <Ionicons name="flash" size={20} color="#10B981" />
+                    <Text style={styles.quickCreateButtonText}>Quick Create (Add details later)</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
+            
             <TouchableOpacity
               style={[styles.submitButton, loading && styles.submitButtonDisabled]}
               onPress={handleSubmit}
