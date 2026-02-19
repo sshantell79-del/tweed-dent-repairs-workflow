@@ -107,18 +107,24 @@ export default function DashboardScreen() {
           <Text style={styles.sectionTitle}>Revenue Overview</Text>
           <View style={styles.revenueRow}>
             <View style={styles.revenueItem}>
-              <Text style={styles.revenueLabel}>Estimated</Text>
+              <Text style={styles.revenueLabel}>Pending</Text>
               <Text style={styles.revenueValue}>
-                ${(stats?.total_estimated_revenue || 0).toLocaleString()}
+                ${(stats?.pending_revenue || 0).toLocaleString()}
               </Text>
             </View>
             <View style={styles.revenueDivider} />
             <View style={styles.revenueItem}>
-              <Text style={styles.revenueLabel}>Actual</Text>
+              <Text style={styles.revenueLabel}>Completed</Text>
               <Text style={styles.revenueValue}>
-                ${(stats?.total_actual_revenue || 0).toLocaleString()}
+                ${(stats?.completed_revenue || 0).toLocaleString()}
               </Text>
             </View>
+          </View>
+          <View style={styles.totalRevenueRow}>
+            <Text style={styles.totalRevenueLabel}>Total Estimated:</Text>
+            <Text style={styles.totalRevenueValue}>
+              ${(stats?.total_estimated_revenue || 0).toLocaleString()}
+            </Text>
           </View>
         </View>
 
