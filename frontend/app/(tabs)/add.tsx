@@ -788,6 +788,23 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     marginBottom: 100,
+    gap: 12,
+  },
+  quickCreateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#D1FAE5',
+    borderRadius: 12,
+    padding: 16,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#10B981',
+  },
+  quickCreateButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#10B981',
   },
   submitButton: {
     flexDirection: 'row',
