@@ -513,15 +513,31 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
     active_jobs = sum(status_dict.get(s, 0) for s in ["Received", "Awaiting Parts", "Awaiting Approval", "In Progress", "Ready for Payment"])
     completed_jobs = status_dict.get("Completed", 0) + status_dict.get("Collected", 0)
     
-    # Revenue stats (from completed jobs)
-    revenue_pipeline = [
-        {"$match": {"status": {"$in": ["Completed", "Collected"]}}},
+    # Total estimated revenue from ALL jobs
+    all_revenue_pipeline = [
         {"$group": {"_id": None, "total_estimated": {"$sum": "$estimated_cost"}, "total_actual": {"$sum": "$actual_cost"}}}
     ]
-    revenue_stats = await db.jobs.aggregate(revenue_pipeline).to_list(1)
+    all_revenue_stats = await db.jobs.aggregate(all_revenue_pipeline).to_list(1)
     
-    total_estimated = revenue_stats[0]["total_estimated"] if revenue_stats and revenue_stats[0].get("total_estimated") else 0
-    total_actual = revenue_stats[0]["total_actual"] if revenue_stats and revenue_stats[0].get("total_actual") else 0
+    total_estimated = all_revenue_stats[0]["total_estimated"] if all_revenue_stats and all_revenue_stats[0].get("total_estimated") else 0
+    total_actual = all_revenue_stats[0]["total_actual"] if all_revenue_stats and all_revenue_stats[0].get("total_actual") else 0
+    
+    # Revenue from active jobs (pending)
+    active_revenue_pipeline = [
+        {"$match": {"status": {"$in": ["Received", "Awaiting Parts", "Awaiting Approval", "In Progress", "Ready for Payment"]}}},
+        {"$group": {"_id": None, "pending_estimated": {"$sum": "$estimated_cost"}}}
+    ]
+    active_revenue_stats = await db.jobs.aggregate(active_revenue_pipeline).to_list(1)
+    pending_estimated = active_revenue_stats[0]["pending_estimated"] if active_revenue_stats and active_revenue_stats[0].get("pending_estimated") else 0
+    
+    # Revenue from completed jobs
+    completed_revenue_pipeline = [
+        {"$match": {"status": {"$in": ["Completed", "Collected"]}}},
+        {"$group": {"_id": None, "completed_estimated": {"$sum": "$estimated_cost"}, "completed_actual": {"$sum": "$actual_cost"}}}
+    ]
+    completed_revenue_stats = await db.jobs.aggregate(completed_revenue_pipeline).to_list(1)
+    completed_estimated = completed_revenue_stats[0]["completed_estimated"] if completed_revenue_stats and completed_revenue_stats[0].get("completed_estimated") else 0
+    completed_actual = completed_revenue_stats[0]["completed_actual"] if completed_revenue_stats and completed_revenue_stats[0].get("completed_actual") else 0
     
     return {
         "total_jobs": total_jobs,
@@ -529,7 +545,9 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
         "completed_jobs": completed_jobs,
         "status_breakdown": status_dict,
         "total_estimated_revenue": total_estimated,
-        "total_actual_revenue": total_actual
+        "total_actual_revenue": total_actual,
+        "pending_revenue": pending_estimated,
+        "completed_revenue": completed_actual or completed_estimated
     }
 
 @api_router.get("/statuses")
