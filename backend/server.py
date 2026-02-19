@@ -120,9 +120,9 @@ class CostItem(BaseModel):
 # Job Models
 class JobCreate(BaseModel):
     car_info: CarInfo
-    owner_info: OwnerInfo
+    owner_info: Optional[OwnerInfo] = None  # Now optional - can add later
     insurance_info: Optional[InsuranceInfo] = None
-    damage_description: str
+    damage_description: Optional[str] = None  # Now optional - can add later
     estimated_cost: Optional[float] = None
     cost_items: Optional[List[CostItem]] = []
     notes: Optional[str] = None
