@@ -174,20 +174,70 @@ export default function AddJobScreen() {
     setPhotos(photos.filter((_, i) => i !== index));
   };
 
+  const validateVehicleOnly = () => {
+    if (!make || !model || !year || !registration) {
+      Alert.alert('Error', 'Please fill in vehicle details (Make, Model, Year, Registration)');
+      return false;
+    }
+    return true;
+  };
+
   const validateForm = () => {
     if (!make || !model || !year || !registration) {
       Alert.alert('Error', 'Please fill in all required car details');
       return false;
     }
-    if (!ownerName || !ownerPhone) {
-      Alert.alert('Error', 'Please fill in owner name and phone');
-      return false;
-    }
-    if (!damageDescription) {
-      Alert.alert('Error', 'Please describe the damage');
-      return false;
-    }
+    // Owner and damage are now optional for quick create
     return true;
+  };
+
+  // Quick create - just vehicle info
+  const handleQuickCreate = async () => {
+    if (!validateVehicleOnly()) return;
+
+    setLoading(true);
+    try {
+      const jobData = {
+        car_info: {
+          make,
+          model,
+          year: parseInt(year),
+          registration: registration.toUpperCase(),
+          vin: vin || undefined,
+          color: color || undefined,
+        },
+        // Owner info is optional
+        owner_info: ownerName ? {
+          name: ownerName,
+          phone: ownerPhone || 'TBA',
+          email: ownerEmail || undefined,
+          address: ownerAddress || undefined,
+        } : undefined,
+        insurance_info: insuranceCompany ? {
+          company: insuranceCompany,
+          policy_number: policyNumber || undefined,
+          claim_number: claimNumber || undefined,
+        } : undefined,
+        damage_description: damageDescription || undefined,
+        estimated_cost: estimatedCost ? parseFloat(estimatedCost) : undefined,
+        notes: notes || undefined,
+      };
+
+      const job = await jobsAPI.create(jobData);
+
+      // Add photos if any
+      for (const photo of photos) {
+        await jobsAPI.addPhoto(job.id, photo.base64, undefined, 'damage');
+      }
+
+      Alert.alert('Job Created!', `Job for ${registration.toUpperCase()} created. You can add owner & damage details later.`, [
+        { text: 'OK', onPress: () => router.back() }
+      ]);
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to create job');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -204,18 +254,18 @@ export default function AddJobScreen() {
           vin: vin || undefined,
           color: color || undefined,
         },
-        owner_info: {
+        owner_info: ownerName ? {
           name: ownerName,
-          phone: ownerPhone,
+          phone: ownerPhone || 'TBA',
           email: ownerEmail || undefined,
           address: ownerAddress || undefined,
-        },
+        } : undefined,
         insurance_info: insuranceCompany ? {
           company: insuranceCompany,
           policy_number: policyNumber || undefined,
           claim_number: claimNumber || undefined,
         } : undefined,
-        damage_description: damageDescription,
+        damage_description: damageDescription || undefined,
         estimated_cost: estimatedCost ? parseFloat(estimatedCost) : undefined,
         notes: notes || undefined,
       };
