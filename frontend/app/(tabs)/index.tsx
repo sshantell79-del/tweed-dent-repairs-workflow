@@ -336,6 +336,25 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#059669',
   },
+  totalRevenueRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  totalRevenueLabel: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  totalRevenueValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
   statusSection: {
     paddingHorizontal: 20,
     marginBottom: 20,
