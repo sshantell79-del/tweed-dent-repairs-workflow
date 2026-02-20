@@ -372,6 +372,22 @@ export default function JobDetailScreen() {
           ))}
         </View>
 
+        {/* Create Invoice Button */}
+        <TouchableOpacity
+          style={styles.createInvoiceButton}
+          onPress={handleCreateInvoice}
+          disabled={creatingInvoice}
+        >
+          {creatingInvoice ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <>
+              <Ionicons name="document-text-outline" size={20} color="#FFFFFF" />
+              <Text style={styles.createInvoiceText}>Create Invoice</Text>
+            </>
+          )}
+        </TouchableOpacity>
+
         <View style={styles.footer}>
           <Text style={styles.footerText}>
             Created {format(new Date(job.created_at), 'dd MMM yyyy')} by {job.created_by}
