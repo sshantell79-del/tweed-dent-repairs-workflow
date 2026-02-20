@@ -1031,7 +1031,7 @@ async def update_invoice(invoice_id: str, invoice_update: InvoiceUpdate, current
     return InvoiceResponse(**updated_invoice)
 
 @api_router.put("/invoices/{invoice_id}/status")
-async def update_invoice_status(invoice_id: str, status: str, current_user: dict = Depends(get_current_user)):
+async def update_invoice_status(invoice_id: str, status: str = Query(...), current_user: dict = Depends(get_current_user)):
     """Update invoice status."""
     if status not in INVOICE_STATUSES:
         raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {INVOICE_STATUSES}")
