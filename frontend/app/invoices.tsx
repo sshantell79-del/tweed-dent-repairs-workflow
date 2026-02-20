@@ -420,6 +420,23 @@ export default function InvoicesScreen() {
                       <Text style={styles.actionButtonText}>Mark as Paid</Text>
                     </TouchableOpacity>
                   )}
+                  
+                  {/* Sync to Xero Button */}
+                  <TouchableOpacity
+                    style={[styles.actionButton, { backgroundColor: '#0D9488' }]}
+                    onPress={() => handleSyncToXero(selectedInvoice)}
+                    disabled={syncingToXero}
+                  >
+                    {syncingToXero ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <Ionicons name="cloud-upload-outline" size={18} color="#FFFFFF" />
+                    )}
+                    <Text style={styles.actionButtonText}>
+                      {syncingToXero ? 'Syncing...' : 'Sync to Xero'}
+                    </Text>
+                  </TouchableOpacity>
+                  
                   <TouchableOpacity
                     style={[styles.actionButton, { backgroundColor: '#FEE2E2' }]}
                     onPress={() => handleDelete(selectedInvoice)}
