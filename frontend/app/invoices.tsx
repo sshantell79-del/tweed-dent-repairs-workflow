@@ -62,6 +62,7 @@ export default function InvoicesScreen() {
   const [stats, setStats] = useState<any>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [syncingToXero, setSyncingToXero] = useState(false);
   const router = useRouter();
 
   const loadInvoices = async () => {
@@ -89,6 +90,28 @@ export default function InvoicesScreen() {
     setRefreshing(true);
     await loadInvoices();
     setRefreshing(false);
+  };
+
+  const handleSyncToXero = async (invoice: Invoice) => {
+    setSyncingToXero(true);
+    try {
+      const result = await xeroAPI.syncInvoice(invoice.id);
+      if (result.success) {
+        Alert.alert(
+          'Synced to Xero!',
+          `Invoice ${result.xero_invoice_number} created in Xero`,
+          [{ text: 'OK' }]
+        );
+        setDetailModalVisible(false);
+      } else {
+        Alert.alert('Error', result.message);
+      }
+    } catch (error: any) {
+      const message = error.response?.data?.detail || 'Failed to sync to Xero. Make sure Xero is connected in Profile.';
+      Alert.alert('Sync Failed', message);
+    } finally {
+      setSyncingToXero(false);
+    }
   };
 
   const handleStatusChange = async (invoice: Invoice, newStatus: string) => {
