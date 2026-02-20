@@ -12,7 +12,7 @@ import sys
 import traceback
 
 # Backend URL from environment configuration
-BACKEND_URL = "https://workshop-flow-19.preview.emergentagent.com/api"
+BACKEND_URL = "https://repair-flow-app-1.preview.emergentagent.com/api"
 
 class SmashRepairsAPITester:
     def __init__(self):

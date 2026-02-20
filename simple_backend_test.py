@@ -6,7 +6,7 @@ Simple Backend API Test for Key Error Scenarios
 import requests
 import json
 
-BACKEND_URL = "https://workshop-flow-19.preview.emergentagent.com/api"
+BACKEND_URL = "https://repair-flow-app-1.preview.emergentagent.com/api"
 
 def test_duplicate_registration():
     """Test duplicate registration handling"""
