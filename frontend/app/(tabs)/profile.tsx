@@ -106,6 +106,14 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.menuSection}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/quotes')}>
+          <View style={[styles.menuIcon, { backgroundColor: '#FEF3C7' }]}>
+            <Ionicons name="calculator-outline" size={20} color="#F59E0B" />
+          </View>
+          <Text style={styles.menuText}>Quotes</Text>
+          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/invoices')}>
           <View style={[styles.menuIcon, { backgroundColor: '#D1FAE5' }]}>
             <Ionicons name="document-text-outline" size={20} color="#10B981" />
