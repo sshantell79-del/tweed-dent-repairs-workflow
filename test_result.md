@@ -260,6 +260,8 @@ agent_communication:
     message: "✅ BACKEND TESTING COMPLETED: All 5 backend tasks passed comprehensive testing. Tested 20+ endpoints including authentication, CRUD operations, photo management, dashboard stats, and error handling. All APIs working correctly at https://repair-flow-app-1.preview.emergentagent.com/api. Ready for production use."
   - agent: "main"
     message: "Enhanced the invoicing system with full details - line items, GST (10%), due dates, and payment status. Added Customer endpoints and Contacts UI. Need to test: 1) Invoice CRUD APIs 2) Customer CRUD APIs 3) Invoice status updates"
+  - agent: "testing"
+    message: "✅ CUSTOMER & INVOICE API TESTING COMPLETED: Both new high-priority tasks passed comprehensive testing. Customer CRUD: create/read/update/delete/search working correctly with vehicle tracking and job integration. Invoice CRUD: create-from-job with auto line items, GST calculations (10%), status management (Draft/Sent/Paid), statistics, and delete operations all working. Auto-set paid_date feature working. Fixed minor Query parameter issue in status update endpoint. All 15+ new endpoints tested successfully."
 
 backend:
   - task: "Customer/Contact CRUD API"
