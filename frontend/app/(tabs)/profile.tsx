@@ -1,13 +1,72 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { xeroAPI } from '../../src/services/api';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const [xeroStatus, setXeroStatus] = useState<{connected: boolean; tenant_name?: string} | null>(null);
+  const [xeroLoading, setXeroLoading] = useState(true);
+  const [connecting, setConnecting] = useState(false);
+
+  useEffect(() => {
+    checkXeroStatus();
+  }, []);
+
+  const checkXeroStatus = async () => {
+    try {
+      const status = await xeroAPI.getStatus();
+      setXeroStatus(status);
+    } catch (error) {
+      setXeroStatus({ connected: false });
+    } finally {
+      setXeroLoading(false);
+    }
+  };
+
+  const handleConnectXero = async () => {
+    setConnecting(true);
+    try {
+      const response = await xeroAPI.getAuthUrl();
+      // Open the Xero auth URL in the browser
+      await Linking.openURL(response.auth_url);
+      // After returning, check status again
+      setTimeout(() => {
+        checkXeroStatus();
+        setConnecting(false);
+      }, 5000);
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to connect to Xero');
+      setConnecting(false);
+    }
+  };
+
+  const handleDisconnectXero = async () => {
+    Alert.alert(
+      'Disconnect Xero',
+      'Are you sure you want to disconnect from Xero?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Disconnect',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await xeroAPI.disconnect();
+              setXeroStatus({ connected: false });
+              Alert.alert('Success', 'Disconnected from Xero');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to disconnect');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const handleLogout = () => {
     Alert.alert(
