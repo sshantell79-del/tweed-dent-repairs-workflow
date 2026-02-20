@@ -247,6 +247,15 @@ class PhotoAdd(BaseModel):
     caption: Optional[str] = None
     photo_type: str = "damage"
 
+# Activity Log Model for tracking employee actions
+class ActivityLog(BaseModel):
+    action: str  # created, updated, status_changed, photo_added, photo_deleted
+    employee: str
+    timestamp: datetime
+    details: Optional[str] = None
+    old_value: Optional[str] = None
+    new_value: Optional[str] = None
+
 class JobResponse(BaseModel):
     id: str
     car_info: CarInfo
@@ -260,9 +269,11 @@ class JobResponse(BaseModel):
     cost_items: List[CostItem] = []
     notes: Optional[str] = None
     status_history: List[dict] = []
+    activity_log: List[ActivityLog] = []
     created_at: datetime
     updated_at: datetime
     created_by: str
+    updated_by: Optional[str] = None
 
 # ==================== HELPER FUNCTIONS ====================
 
