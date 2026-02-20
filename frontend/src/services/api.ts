@@ -82,6 +82,35 @@ export const dashboardAPI = {
   },
 };
 
+// Customer/Contact APIs
+export const customersAPI = {
+  getAll: async (search?: string): Promise<any[]> => {
+    const params: any = {};
+    if (search) params.search = search;
+    const response = await api.get('/customers', { params });
+    return response.data;
+  },
+  getOne: async (id: string): Promise<any> => {
+    const response = await api.get(`/customers/${id}`);
+    return response.data;
+  },
+  create: async (customerData: any): Promise<any> => {
+    const response = await api.post('/customers', customerData);
+    return response.data;
+  },
+  update: async (id: string, customerData: any): Promise<any> => {
+    const response = await api.put(`/customers/${id}`, customerData);
+    return response.data;
+  },
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/customers/${id}`);
+  },
+  getJobs: async (id: string): Promise<any[]> => {
+    const response = await api.get(`/customers/${id}/jobs`);
+    return response.data;
+  },
+};
+
 // Plate Scanning API
 export const scanAPI = {
   scanPlate: async (imageBase64: string): Promise<{ 
