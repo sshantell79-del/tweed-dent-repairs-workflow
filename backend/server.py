@@ -1705,8 +1705,7 @@ async def update_quote(quote_id: str, quote: QuoteCreate, current_user: dict = D
     if not existing:
         raise HTTPException(status_code=404, detail="Quote not found")
     
-    total_min = sum(item.cost_min for item in quote.line_items)
-    total_max = sum(item.cost_max for item in quote.line_items)
+    total = sum(item.price for item in quote.line_items)
     
     update_data = {
         "customer_name": quote.customer_name,
@@ -1718,8 +1717,7 @@ async def update_quote(quote_id: str, quote: QuoteCreate, current_user: dict = D
         "vehicle_year": quote.vehicle_year,
         "vehicle_color": quote.vehicle_color,
         "line_items": [item.dict() for item in quote.line_items],
-        "total_min": total_min,
-        "total_max": total_max,
+        "total": total,
         "notes": quote.notes,
         "photos": quote.photos,
         "updated_at": datetime.utcnow()
