@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { invoicesAPI } from '../src/services/api';
+import { invoicesAPI, xeroAPI } from '../src/services/api';
 import { format } from 'date-fns';
 
 const INVOICE_STATUSES = ['All', 'Draft', 'Sent', 'Paid', 'Overdue', 'Cancelled'];
