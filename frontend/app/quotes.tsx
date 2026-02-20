@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { quotesAPI, damageAPI, DamageItem, Quote, QuoteLineItem } from '../src/services/api';
+import { quotesAPI, damageAPI, Quote, QuoteLineItem, PanelPricing } from '../src/services/api';
 import { format } from 'date-fns';
 
 const QUOTE_STATUSES = ['All', 'Draft', 'Sent', 'Accepted', 'Declined', 'Expired'];
@@ -31,25 +31,16 @@ const STATUS_COLORS: { [key: string]: string } = {
   Expired: '#F59E0B',
 };
 
-// Panel numbering reference
-const PANEL_MAP: { [key: number]: string } = {
-  1: "Right Front Guard",
-  2: "Right Front Door",
-  3: "Right Rear Door",
-  4: "Right Rear Quarter",
-  5: "Rear Bumper (Right)",
-  6: "Rear Bumper (Left)",
-  7: "Left Rear Quarter",
-  8: "Left Rear Door",
-  9: "Left Front Door",
-  10: "Left Front Guard",
-  11: "Bonnet/Hood",
-  12: "Roof",
-  13: "Boot/Trunk Lid",
-  14: "Front Bumper (Centre)",
-  15: "Front Bumper (Left)",
-  16: "Front Bumper (Right)",
-};
+const CATEGORIES = [1, 2, 3, 4, 5];
+
+interface DamageLineItem {
+  panel_number: number;
+  panel_name: string;
+  category: number;
+  price: number;
+  is_manual_price: boolean;
+  description: string;
+}
 
 export default function QuotesScreen() {
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -62,6 +53,7 @@ export default function QuotesScreen() {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [panelPricing, setPanelPricing] = useState<PanelPricing | null>(null);
   const router = useRouter();
 
   // New quote form state
@@ -74,8 +66,23 @@ export default function QuotesScreen() {
     vehicle_model: '',
     notes: '',
   });
-  const [damageItems, setDamageItems] = useState<DamageItem[]>([]);
+  const [damageItems, setDamageItems] = useState<DamageLineItem[]>([]);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [addPanelModalVisible, setAddPanelModalVisible] = useState(false);
+
+  // Load panel pricing on mount
+  useEffect(() => {
+    loadPanelPricing();
+  }, []);
+
+  const loadPanelPricing = async () => {
+    try {
+      const pricing = await damageAPI.getPanelPricing();
+      setPanelPricing(pricing);
+    } catch (error) {
+      console.error('Failed to load panel pricing:', error);
+    }
+  };
 
   const loadQuotes = async () => {
     try {
@@ -135,23 +142,100 @@ export default function QuotesScreen() {
   };
 
   const analyzeImage = async (base64: string) => {
+    if (!panelPricing) return;
+    
     setAnalyzing(true);
     try {
       const result = await damageAPI.analyzeDamage(base64);
-      if (result.success && result.damages.length > 0) {
-        // Merge new damages with existing ones (avoid duplicates by panel number)
+      if (result.success && result.panels_detected.length > 0) {
+        // Add detected panels with default category 1
         const existingPanels = new Set(damageItems.map(d => d.panel_number));
-        const newDamages = result.damages.filter(d => !existingPanels.has(d.panel_number));
-        setDamageItems([...damageItems, ...newDamages]);
-        Alert.alert('Damage Detected', result.message);
+        const newItems: DamageLineItem[] = [];
+        
+        for (const panelNum of result.panels_detected) {
+          if (!existingPanels.has(panelNum) && panelPricing.panels[panelNum]) {
+            const price = panelPricing.pricing[panelNum]?.[1] ?? 0;
+            newItems.push({
+              panel_number: panelNum,
+              panel_name: panelPricing.panels[panelNum],
+              category: 1,
+              price: price,
+              is_manual_price: price === null,
+              description: '',
+            });
+          }
+        }
+        
+        if (newItems.length > 0) {
+          setDamageItems([...damageItems, ...newItems]);
+          Alert.alert('Damage Detected', result.message);
+        } else {
+          Alert.alert('Info', 'Panels already added or not recognized');
+        }
       } else {
-        Alert.alert('Analysis Complete', result.message || 'No damage detected in this photo');
+        Alert.alert('Analysis Complete', result.message || 'No damage detected');
       }
     } catch (error: any) {
-      Alert.alert('Error', 'Failed to analyze damage. Please try again.');
+      Alert.alert('Error', 'Failed to analyze damage');
     } finally {
       setAnalyzing(false);
     }
+  };
+
+  const addPanelManually = (panelNumber: number) => {
+    if (!panelPricing) return;
+    
+    const existingPanels = new Set(damageItems.map(d => d.panel_number));
+    if (existingPanels.has(panelNumber)) {
+      Alert.alert('Info', 'This panel is already added');
+      return;
+    }
+
+    const price = panelPricing.pricing[panelNumber]?.[1] ?? 0;
+    const newItem: DamageLineItem = {
+      panel_number: panelNumber,
+      panel_name: panelPricing.panels[panelNumber],
+      category: 1,
+      price: price,
+      is_manual_price: price === null,
+      description: '',
+    };
+    
+    setDamageItems([...damageItems, newItem]);
+    setAddPanelModalVisible(false);
+  };
+
+  const updateItemCategory = (index: number, category: number) => {
+    if (!panelPricing) return;
+    
+    const updated = [...damageItems];
+    const item = updated[index];
+    const price = panelPricing.pricing[item.panel_number]?.[category];
+    
+    updated[index] = {
+      ...item,
+      category: category,
+      price: price ?? item.price,
+      is_manual_price: price === null,
+    };
+    
+    setDamageItems(updated);
+  };
+
+  const updateItemPrice = (index: number, price: string) => {
+    const updated = [...damageItems];
+    updated[index] = {
+      ...updated[index],
+      price: parseFloat(price) || 0,
+      is_manual_price: true,
+    };
+    setDamageItems(updated);
+  };
+
+  const updateItemDescription = (index: number, description: string) => {
+    const updated = [...damageItems];
+    updated[index] = { ...updated[index], description };
+    setDamageItems(updated);
   };
 
   const removeDamageItem = (index: number) => {
@@ -160,13 +244,17 @@ export default function QuotesScreen() {
     setDamageItems(updated);
   };
 
+  const getTotal = () => {
+    return damageItems.reduce((sum, item) => sum + item.price, 0);
+  };
+
   const handleCreateQuote = async () => {
     if (!newQuote.customer_name.trim()) {
       Alert.alert('Error', 'Please enter customer name');
       return;
     }
     if (damageItems.length === 0) {
-      Alert.alert('Error', 'Please add at least one damage item by taking a photo');
+      Alert.alert('Error', 'Please add at least one damage item');
       return;
     }
 
@@ -175,10 +263,10 @@ export default function QuotesScreen() {
       const lineItems: QuoteLineItem[] = damageItems.map(d => ({
         panel_number: d.panel_number,
         panel_name: d.panel_name,
+        category: d.category,
+        price: d.price,
+        is_manual_price: d.is_manual_price,
         description: d.description,
-        repair_method: d.repair_method,
-        cost_min: d.estimated_cost_min,
-        cost_max: d.estimated_cost_max,
       }));
 
       await quotesAPI.create({
@@ -306,7 +394,7 @@ export default function QuotesScreen() {
         )}
 
         <Text style={styles.itemsCount}>
-          {item.line_items.length} damage item(s)
+          {item.line_items.length} panel(s)
         </Text>
 
         <View style={styles.quoteFooter}>
@@ -314,7 +402,7 @@ export default function QuotesScreen() {
             {format(new Date(item.created_at), 'dd MMM yyyy')}
           </Text>
           <Text style={styles.totalAmount}>
-            ${item.total_min.toLocaleString()} - ${item.total_max.toLocaleString()}
+            ${item.total.toLocaleString()}
           </Text>
         </View>
       </TouchableOpacity>
@@ -489,20 +577,27 @@ export default function QuotesScreen() {
                 </View>
               </View>
 
-              {/* Damage Photos */}
-              <Text style={styles.sectionTitle}>Damage Photos</Text>
+              {/* Damage Assessment */}
+              <Text style={styles.sectionTitle}>Damage Assessment</Text>
               <Text style={styles.sectionSubtitle}>
-                Take photos of the damage - AI will identify panels and estimate costs
+                Take photos to auto-detect panels, or add manually
               </Text>
               
               <View style={styles.photoButtons}>
                 <TouchableOpacity style={styles.photoButton} onPress={takePhoto} disabled={analyzing}>
                   <Ionicons name="camera" size={24} color="#3B82F6" />
-                  <Text style={styles.photoButtonText}>Take Photo</Text>
+                  <Text style={styles.photoButtonText}>Camera</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.photoButton} onPress={pickImage} disabled={analyzing}>
                   <Ionicons name="images" size={24} color="#3B82F6" />
-                  <Text style={styles.photoButtonText}>Choose Photo</Text>
+                  <Text style={styles.photoButtonText}>Gallery</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.photoButton, { backgroundColor: '#FEF3C7', borderColor: '#FCD34D' }]} 
+                  onPress={() => setAddPanelModalVisible(true)}
+                >
+                  <Ionicons name="add-circle" size={24} color="#F59E0B" />
+                  <Text style={[styles.photoButtonText, { color: '#F59E0B' }]}>Add Panel</Text>
                 </TouchableOpacity>
               </View>
 
@@ -525,36 +620,80 @@ export default function QuotesScreen() {
               {/* Damage Items */}
               {damageItems.length > 0 && (
                 <>
-                  <Text style={styles.sectionTitle}>Identified Damage</Text>
+                  <Text style={styles.sectionTitle}>Panels ({damageItems.length})</Text>
                   {damageItems.map((item, index) => (
                     <View key={index} style={styles.damageItem}>
                       <View style={styles.damageItemHeader}>
                         <View style={styles.panelBadge}>
                           <Text style={styles.panelNumber}>{item.panel_number}</Text>
                         </View>
-                        <View style={styles.damageItemInfo}>
-                          <Text style={styles.damageItemTitle}>{item.panel_name}</Text>
-                          <Text style={styles.damageItemDesc}>{item.damage_type} - {item.severity}</Text>
-                        </View>
+                        <Text style={styles.panelName}>{item.panel_name}</Text>
                         <TouchableOpacity onPress={() => removeDamageItem(index)}>
                           <Ionicons name="close-circle" size={24} color="#EF4444" />
                         </TouchableOpacity>
                       </View>
-                      <View style={styles.damageItemFooter}>
-                        <Text style={styles.repairMethod}>{item.repair_method}</Text>
-                        <Text style={styles.costRange}>
-                          ${item.estimated_cost_min.toFixed(0)} - ${item.estimated_cost_max.toFixed(0)}
-                        </Text>
+                      
+                      {/* Category Selection */}
+                      <View style={styles.categoryRow}>
+                        <Text style={styles.categoryLabel}>Category:</Text>
+                        <View style={styles.categoryButtons}>
+                          {CATEGORIES.map((cat) => {
+                            const catPrice = panelPricing?.pricing[item.panel_number]?.[cat];
+                            const isManual = catPrice === null || catPrice === undefined;
+                            return (
+                              <TouchableOpacity
+                                key={cat}
+                                style={[
+                                  styles.categoryButton,
+                                  item.category === cat && styles.categoryButtonActive,
+                                ]}
+                                onPress={() => updateItemCategory(index, cat)}
+                              >
+                                <Text style={[
+                                  styles.categoryButtonText,
+                                  item.category === cat && styles.categoryButtonTextActive,
+                                ]}>
+                                  {cat}
+                                </Text>
+                                {isManual && <Text style={styles.manualIndicator}>*</Text>}
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
                       </View>
+
+                      {/* Price Input */}
+                      <View style={styles.priceRow}>
+                        <Text style={styles.priceLabel}>
+                          {item.is_manual_price ? 'Enter Price:' : 'Price:'}
+                        </Text>
+                        {item.is_manual_price ? (
+                          <TextInput
+                            style={styles.priceInput}
+                            value={item.price.toString()}
+                            onChangeText={(text) => updateItemPrice(index, text)}
+                            keyboardType="numeric"
+                            placeholder="Enter price"
+                          />
+                        ) : (
+                          <Text style={styles.priceValue}>${item.price}</Text>
+                        )}
+                      </View>
+
+                      {/* Description */}
+                      <TextInput
+                        style={styles.descriptionInput}
+                        placeholder="Add description (optional)"
+                        placeholderTextColor="#9CA3AF"
+                        value={item.description}
+                        onChangeText={(text) => updateItemDescription(index, text)}
+                      />
                     </View>
                   ))}
 
                   <View style={styles.totalContainer}>
-                    <Text style={styles.totalLabel}>Estimated Total:</Text>
-                    <Text style={styles.totalValue}>
-                      ${damageItems.reduce((sum, d) => sum + d.estimated_cost_min, 0).toFixed(0)} - 
-                      ${damageItems.reduce((sum, d) => sum + d.estimated_cost_max, 0).toFixed(0)}
-                    </Text>
+                    <Text style={styles.totalLabel}>Total:</Text>
+                    <Text style={styles.totalValue}>${getTotal().toLocaleString()}</Text>
                   </View>
                 </>
               )}
@@ -592,6 +731,49 @@ export default function QuotesScreen() {
         </SafeAreaView>
       </Modal>
 
+      {/* Add Panel Modal */}
+      <Modal
+        visible={addPanelModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setAddPanelModalVisible(false)}
+      >
+        <View style={styles.panelModalOverlay}>
+          <View style={styles.panelModalContent}>
+            <View style={styles.panelModalHeader}>
+              <Text style={styles.panelModalTitle}>Select Panel</Text>
+              <TouchableOpacity onPress={() => setAddPanelModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.panelList}>
+              {panelPricing && Object.entries(panelPricing.panels).map(([num, name]) => {
+                const panelNum = parseInt(num);
+                const isAdded = damageItems.some(d => d.panel_number === panelNum);
+                return (
+                  <TouchableOpacity
+                    key={num}
+                    style={[styles.panelOption, isAdded && styles.panelOptionDisabled]}
+                    onPress={() => !isAdded && addPanelManually(panelNum)}
+                    disabled={isAdded}
+                  >
+                    <View style={styles.panelOptionBadge}>
+                      <Text style={styles.panelOptionNumber}>{num}</Text>
+                    </View>
+                    <Text style={[styles.panelOptionName, isAdded && { color: '#9CA3AF' }]}>
+                      {name}
+                    </Text>
+                    {isAdded && (
+                      <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
       {/* Quote Detail Modal */}
       <Modal
         visible={detailModalVisible}
@@ -617,18 +799,13 @@ export default function QuotesScreen() {
                   {selectedQuote.customer_phone && (
                     <Text style={styles.detailSubtext}>{selectedQuote.customer_phone}</Text>
                   )}
-                  {selectedQuote.customer_email && (
-                    <Text style={styles.detailSubtext}>{selectedQuote.customer_email}</Text>
-                  )}
                 </View>
 
                 {/* Vehicle */}
                 {selectedQuote.vehicle_registration && (
                   <View style={styles.detailSection}>
                     <Text style={styles.detailSectionTitle}>Vehicle</Text>
-                    <Text style={styles.detailText}>
-                      {selectedQuote.vehicle_registration}
-                    </Text>
+                    <Text style={styles.detailText}>{selectedQuote.vehicle_registration}</Text>
                     <Text style={styles.detailSubtext}>
                       {[selectedQuote.vehicle_make, selectedQuote.vehicle_model].filter(Boolean).join(' ')}
                     </Text>
@@ -647,29 +824,27 @@ export default function QuotesScreen() {
 
                 {/* Damage Items */}
                 <View style={styles.detailSection}>
-                  <Text style={styles.detailSectionTitle}>Damage Items</Text>
+                  <Text style={styles.detailSectionTitle}>Panels</Text>
                   {selectedQuote.line_items.map((item, index) => (
                     <View key={index} style={styles.detailDamageItem}>
                       <View style={styles.panelBadgeSmall}>
                         <Text style={styles.panelNumberSmall}>{item.panel_number}</Text>
                       </View>
                       <View style={{ flex: 1 }}>
-                        <Text style={styles.detailDamageTitle}>{item.description}</Text>
-                        <Text style={styles.detailDamageMethod}>{item.repair_method}</Text>
+                        <Text style={styles.detailDamageTitle}>{item.panel_name}</Text>
+                        <Text style={styles.detailDamageMethod}>
+                          Category {item.category} {item.description && `- ${item.description}`}
+                        </Text>
                       </View>
-                      <Text style={styles.detailDamageCost}>
-                        ${item.cost_min.toFixed(0)} - ${item.cost_max.toFixed(0)}
-                      </Text>
+                      <Text style={styles.detailDamageCost}>${item.price}</Text>
                     </View>
                   ))}
                 </View>
 
                 {/* Total */}
                 <View style={styles.detailTotalSection}>
-                  <Text style={styles.detailTotalLabel}>Estimated Total</Text>
-                  <Text style={styles.detailTotalValue}>
-                    ${selectedQuote.total_min.toLocaleString()} - ${selectedQuote.total_max.toLocaleString()}
-                  </Text>
+                  <Text style={styles.detailTotalLabel}>Total</Text>
+                  <Text style={styles.detailTotalValue}>${selectedQuote.total.toLocaleString()}</Text>
                 </View>
 
                 {/* Actions */}
@@ -710,477 +885,106 @@ export default function QuotesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  addButton: {
-    backgroundColor: '#3B82F6',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  searchContainer: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: '#FFFFFF',
-  },
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-  },
-  searchInput: {
-    flex: 1,
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    fontSize: 16,
-    color: '#1F2937',
-  },
-  filterContainer: {
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  filterContent: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
-  },
-  filterChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
-    marginRight: 8,
-  },
-  filterChipActive: {
-    backgroundColor: '#3B82F6',
-  },
-  filterText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6B7280',
-  },
-  filterTextActive: {
-    color: '#FFFFFF',
-  },
-  listContent: {
-    padding: 16,
-  },
-  quoteCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-  },
-  quoteHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  quoteNumber: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  customerName: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#374151',
-    marginBottom: 4,
-  },
-  vehicleInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: 4,
-  },
-  vehicleText: {
-    fontSize: 13,
-    color: '#6B7280',
-  },
-  itemsCount: {
-    fontSize: 13,
-    color: '#9CA3AF',
-    marginBottom: 8,
-  },
-  quoteFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
-    paddingTop: 12,
-  },
-  dateText: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
-  totalAmount: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#059669',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    paddingTop: 60,
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#374151',
-    marginTop: 16,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  modalBody: {
-    flex: 1,
-    padding: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
-    marginTop: 20,
-    marginBottom: 12,
-  },
-  sectionSubtitle: {
-    fontSize: 13,
-    color: '#6B7280',
-    marginBottom: 12,
-    marginTop: -8,
-  },
-  inputGroup: {
-    gap: 12,
-  },
-  input: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: '#1F2937',
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  rowInputs: {
-    flexDirection: 'row',
-  },
-  photoButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  photoButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
-    borderRadius: 12,
-    paddingVertical: 16,
-  },
-  photoButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#3B82F6',
-  },
-  analyzingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-  },
-  analyzingText: {
-    fontSize: 14,
-    color: '#3B82F6',
-  },
-  photoGallery: {
-    marginTop: 12,
-  },
-  photoThumbnail: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginRight: 8,
-  },
-  damageItem: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  damageItemHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  panelBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#3B82F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  panelNumber: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  damageItemInfo: {
-    flex: 1,
-  },
-  damageItemTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  damageItemDesc: {
-    fontSize: 13,
-    color: '#6B7280',
-    marginTop: 2,
-  },
-  damageItemFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
-  },
-  repairMethod: {
-    fontSize: 12,
-    color: '#059669',
-    backgroundColor: '#D1FAE5',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  costRange: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-  },
-  totalContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#F0FDF4',
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 8,
-  },
-  totalLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
-  },
-  totalValue: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#059669',
-  },
-  createButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#3B82F6',
-    borderRadius: 12,
-    paddingVertical: 16,
-    marginTop: 24,
-  },
-  createButtonDisabled: {
-    opacity: 0.7,
-  },
-  createButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  detailModalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  detailModalContent: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '85%',
-  },
-  detailBody: {
-    padding: 20,
-  },
-  detailSection: {
-    marginBottom: 20,
-  },
-  detailSectionTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#9CA3AF',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-  detailText: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#1F2937',
-  },
-  detailSubtext: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginTop: 2,
-  },
-  statusBadgeLarge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  statusTextLarge: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  detailDamageItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  panelBadgeSmall: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#3B82F6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  panelNumberSmall: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  detailDamageTitle: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1F2937',
-  },
-  detailDamageMethod: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  detailDamageCost: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-  },
-  detailTotalSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: '#F0FDF4',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
-  },
-  detailTotalLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
-  },
-  detailTotalValue: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#059669',
-  },
-  detailActions: {
-    gap: 10,
-    marginBottom: 20,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 12,
-  },
-  actionButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
+  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+  headerTitle: { fontSize: 20, fontWeight: '700', color: '#1F2937' },
+  addButton: { backgroundColor: '#3B82F6', width: 40, height: 40, borderRadius: 20, justifyContent: 'center', alignItems: 'center' },
+  searchContainer: { paddingHorizontal: 20, paddingVertical: 12, backgroundColor: '#FFFFFF' },
+  searchBox: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F3F4F6', borderRadius: 12, paddingHorizontal: 12 },
+  searchInput: { flex: 1, paddingVertical: 12, paddingHorizontal: 8, fontSize: 16, color: '#1F2937' },
+  filterContainer: { backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+  filterContent: { paddingHorizontal: 16, paddingVertical: 12 },
+  filterChip: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: '#F3F4F6', marginRight: 8 },
+  filterChipActive: { backgroundColor: '#3B82F6' },
+  filterText: { fontSize: 14, fontWeight: '500', color: '#6B7280' },
+  filterTextActive: { color: '#FFFFFF' },
+  listContent: { padding: 16 },
+  quoteCard: { backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, marginBottom: 12 },
+  quoteHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  quoteNumber: { fontSize: 16, fontWeight: '600', color: '#1F2937' },
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
+  statusText: { fontSize: 12, fontWeight: '600' },
+  customerName: { fontSize: 15, fontWeight: '500', color: '#374151', marginBottom: 4 },
+  vehicleInfo: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 4 },
+  vehicleText: { fontSize: 13, color: '#6B7280' },
+  itemsCount: { fontSize: 13, color: '#9CA3AF', marginBottom: 8 },
+  quoteFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#F3F4F6', paddingTop: 12 },
+  dateText: { fontSize: 12, color: '#9CA3AF' },
+  totalAmount: { fontSize: 18, fontWeight: '700', color: '#059669' },
+  emptyContainer: { alignItems: 'center', paddingTop: 60 },
+  emptyTitle: { fontSize: 18, fontWeight: '600', color: '#374151', marginTop: 16 },
+  emptyText: { fontSize: 14, color: '#9CA3AF', marginTop: 8, textAlign: 'center' },
+  modalContainer: { flex: 1, backgroundColor: '#F9FAFB' },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+  modalTitle: { fontSize: 18, fontWeight: '600', color: '#1F2937' },
+  modalBody: { flex: 1, padding: 20 },
+  sectionTitle: { fontSize: 16, fontWeight: '600', color: '#374151', marginTop: 20, marginBottom: 12 },
+  sectionSubtitle: { fontSize: 13, color: '#6B7280', marginBottom: 12, marginTop: -8 },
+  inputGroup: { gap: 12 },
+  input: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, color: '#1F2937' },
+  textArea: { minHeight: 80, textAlignVertical: 'top' },
+  rowInputs: { flexDirection: 'row' },
+  photoButtons: { flexDirection: 'row', gap: 8 },
+  photoButton: { flex: 1, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#BFDBFE', borderRadius: 12, paddingVertical: 12 },
+  photoButtonText: { fontSize: 12, fontWeight: '500', color: '#3B82F6' },
+  analyzingContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16 },
+  analyzingText: { fontSize: 14, color: '#3B82F6' },
+  photoGallery: { marginTop: 12 },
+  photoThumbnail: { width: 60, height: 60, borderRadius: 8, marginRight: 8 },
+  damageItem: { backgroundColor: '#FFFFFF', borderRadius: 12, padding: 12, marginBottom: 10, borderWidth: 1, borderColor: '#E5E7EB' },
+  damageItemHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
+  panelBadge: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#3B82F6', justifyContent: 'center', alignItems: 'center' },
+  panelNumber: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
+  panelName: { flex: 1, fontSize: 15, fontWeight: '600', color: '#1F2937' },
+  categoryRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
+  categoryLabel: { fontSize: 14, color: '#6B7280', marginRight: 12 },
+  categoryButtons: { flexDirection: 'row', gap: 6 },
+  categoryButton: { width: 36, height: 36, borderRadius: 8, backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center', position: 'relative' },
+  categoryButtonActive: { backgroundColor: '#3B82F6' },
+  categoryButtonText: { fontSize: 14, fontWeight: '600', color: '#6B7280' },
+  categoryButtonTextActive: { color: '#FFFFFF' },
+  manualIndicator: { position: 'absolute', top: 2, right: 4, fontSize: 10, color: '#F59E0B' },
+  priceRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  priceLabel: { fontSize: 14, color: '#6B7280', marginRight: 12 },
+  priceInput: { flex: 1, backgroundColor: '#FEF3C7', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 16, fontWeight: '600', color: '#1F2937' },
+  priceValue: { fontSize: 18, fontWeight: '700', color: '#059669' },
+  descriptionInput: { backgroundColor: '#F9FAFB', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, color: '#1F2937' },
+  totalContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F0FDF4', padding: 16, borderRadius: 12, marginTop: 8 },
+  totalLabel: { fontSize: 16, fontWeight: '600', color: '#374151' },
+  totalValue: { fontSize: 24, fontWeight: '700', color: '#059669' },
+  createButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#3B82F6', borderRadius: 12, paddingVertical: 16, marginTop: 24 },
+  createButtonDisabled: { opacity: 0.7 },
+  createButtonText: { fontSize: 16, fontWeight: '600', color: '#FFFFFF' },
+  panelModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  panelModalContent: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '70%' },
+  panelModalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#E5E7EB' },
+  panelModalTitle: { fontSize: 18, fontWeight: '600', color: '#1F2937' },
+  panelList: { padding: 16 },
+  panelOption: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  panelOptionDisabled: { opacity: 0.5 },
+  panelOptionBadge: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#3B82F6', justifyContent: 'center', alignItems: 'center' },
+  panelOptionNumber: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
+  panelOptionName: { flex: 1, fontSize: 15, color: '#1F2937' },
+  detailModalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  detailModalContent: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, maxHeight: '85%' },
+  detailBody: { padding: 20 },
+  detailSection: { marginBottom: 20 },
+  detailSectionTitle: { fontSize: 12, fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 },
+  detailText: { fontSize: 16, fontWeight: '500', color: '#1F2937' },
+  detailSubtext: { fontSize: 14, color: '#6B7280', marginTop: 2 },
+  statusBadgeLarge: { alignSelf: 'flex-start', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16 },
+  statusTextLarge: { fontSize: 14, fontWeight: '600' },
+  detailDamageItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  panelBadgeSmall: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#3B82F6', justifyContent: 'center', alignItems: 'center' },
+  panelNumberSmall: { fontSize: 12, fontWeight: '700', color: '#FFFFFF' },
+  detailDamageTitle: { fontSize: 14, fontWeight: '500', color: '#1F2937' },
+  detailDamageMethod: { fontSize: 12, color: '#6B7280' },
+  detailDamageCost: { fontSize: 16, fontWeight: '600', color: '#059669' },
+  detailTotalSection: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F0FDF4', padding: 16, borderRadius: 12, marginBottom: 20 },
+  detailTotalLabel: { fontSize: 16, fontWeight: '600', color: '#374151' },
+  detailTotalValue: { fontSize: 24, fontWeight: '700', color: '#059669' },
+  detailActions: { gap: 10, marginBottom: 20 },
+  actionButton: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 14, borderRadius: 12 },
+  actionButtonText: { fontSize: 15, fontWeight: '600', color: '#FFFFFF' },
 });
