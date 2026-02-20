@@ -831,6 +831,267 @@ async def get_customer_jobs(customer_id: str, current_user: dict = Depends(get_c
     
     return result
 
+# ==================== INVOICE ENDPOINTS ====================
+
+async def generate_invoice_number():
+    """Generate a unique invoice number."""
+    # Get count of invoices
+    count = await db.invoices.count_documents({})
+    return f"INV-{str(count + 1).zfill(5)}"
+
+@api_router.get("/invoices", response_model=List[InvoiceResponse])
+async def get_invoices(
+    status: Optional[str] = None,
+    search: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all invoices with optional filtering."""
+    query = {}
+    
+    if status and status != "All":
+        query["status"] = status
+    
+    if search:
+        query["$or"] = [
+            {"invoice_number": {"$regex": search, "$options": "i"}},
+            {"customer_name": {"$regex": search, "$options": "i"}},
+            {"customer_email": {"$regex": search, "$options": "i"}}
+        ]
+    
+    invoices = await db.invoices.find(query).sort("created_at", -1).skip(skip).limit(limit).to_list(limit)
+    
+    result = []
+    for invoice in invoices:
+        invoice["id"] = str(invoice["_id"])
+        del invoice["_id"]
+        result.append(InvoiceResponse(**invoice))
+    
+    return result
+
+@api_router.post("/invoices", response_model=InvoiceResponse)
+async def create_invoice(invoice_data: InvoiceCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new invoice."""
+    now = datetime.utcnow()
+    invoice_number = await generate_invoice_number()
+    
+    # Calculate due date
+    due_date = now + timedelta(days=invoice_data.due_days)
+    
+    invoice_doc = {
+        "invoice_number": invoice_number,
+        "job_id": invoice_data.job_id,
+        "customer_name": invoice_data.customer_name,
+        "customer_email": invoice_data.customer_email,
+        "customer_phone": invoice_data.customer_phone,
+        "customer_address": invoice_data.customer_address,
+        "line_items": [item.dict() for item in invoice_data.line_items],
+        "subtotal": invoice_data.subtotal,
+        "gst": invoice_data.gst,
+        "total": invoice_data.total,
+        "notes": invoice_data.notes,
+        "status": "Draft",
+        "issue_date": now,
+        "due_date": due_date,
+        "paid_date": None,
+        "created_by": current_user["username"],
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    result = await db.invoices.insert_one(invoice_doc)
+    invoice_doc["id"] = str(result.inserted_id)
+    
+    return InvoiceResponse(**invoice_doc)
+
+@api_router.post("/invoices/from-job/{job_id}", response_model=InvoiceResponse)
+async def create_invoice_from_job(job_id: str, current_user: dict = Depends(get_current_user)):
+    """Create an invoice from an existing job."""
+    try:
+        job = await db.jobs.find_one({"_id": ObjectId(job_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid job ID")
+    
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    now = datetime.utcnow()
+    invoice_number = await generate_invoice_number()
+    
+    # Build line items from job
+    line_items = []
+    
+    # Add cost items if present
+    if job.get("cost_items"):
+        for item in job["cost_items"]:
+            line_items.append({
+                "description": item.get("description", "Service"),
+                "quantity": 1,
+                "unit_price": item.get("amount", 0),
+                "total": item.get("amount", 0)
+            })
+    
+    # If no cost items, use estimated or actual cost
+    if not line_items:
+        amount = job.get("actual_cost") or job.get("estimated_cost") or 0
+        line_items.append({
+            "description": f"Repair work - {job.get('damage_description', 'Vehicle repair')}",
+            "quantity": 1,
+            "unit_price": amount,
+            "total": amount
+        })
+    
+    # Calculate totals
+    subtotal = sum(item["total"] for item in line_items)
+    gst = round(subtotal * 0.1, 2)  # 10% GST
+    total = subtotal + gst
+    
+    # Get customer details from job
+    owner_info = job.get("owner_info") or {}
+    car_info = job.get("car_info") or {}
+    
+    invoice_doc = {
+        "invoice_number": invoice_number,
+        "job_id": job_id,
+        "customer_name": owner_info.get("name", "Unknown"),
+        "customer_email": owner_info.get("email"),
+        "customer_phone": owner_info.get("phone"),
+        "customer_address": owner_info.get("address"),
+        "line_items": line_items,
+        "subtotal": subtotal,
+        "gst": gst,
+        "total": total,
+        "notes": f"Vehicle: {car_info.get('year', '')} {car_info.get('make', '')} {car_info.get('model', '')} - {car_info.get('registration', '')}",
+        "status": "Draft",
+        "issue_date": now,
+        "due_date": now + timedelta(days=14),
+        "paid_date": None,
+        "created_by": current_user["username"],
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    result = await db.invoices.insert_one(invoice_doc)
+    invoice_doc["id"] = str(result.inserted_id)
+    
+    return InvoiceResponse(**invoice_doc)
+
+@api_router.get("/invoices/{invoice_id}", response_model=InvoiceResponse)
+async def get_invoice(invoice_id: str, current_user: dict = Depends(get_current_user)):
+    """Get a single invoice."""
+    try:
+        invoice = await db.invoices.find_one({"_id": ObjectId(invoice_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid invoice ID")
+    
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    invoice["id"] = str(invoice["_id"])
+    del invoice["_id"]
+    return InvoiceResponse(**invoice)
+
+@api_router.put("/invoices/{invoice_id}", response_model=InvoiceResponse)
+async def update_invoice(invoice_id: str, invoice_update: InvoiceUpdate, current_user: dict = Depends(get_current_user)):
+    """Update an invoice."""
+    try:
+        invoice = await db.invoices.find_one({"_id": ObjectId(invoice_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid invoice ID")
+    
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    update_data = {}
+    update_dict = invoice_update.dict(exclude_unset=True)
+    
+    for key, value in update_dict.items():
+        if value is not None:
+            if key == "line_items":
+                update_data[key] = value
+            else:
+                update_data[key] = value
+    
+    update_data["updated_at"] = datetime.utcnow()
+    
+    # If marking as paid, set paid_date
+    if update_data.get("status") == "Paid" and not invoice.get("paid_date"):
+        update_data["paid_date"] = datetime.utcnow()
+    
+    await db.invoices.update_one(
+        {"_id": ObjectId(invoice_id)},
+        {"$set": update_data}
+    )
+    
+    updated_invoice = await db.invoices.find_one({"_id": ObjectId(invoice_id)})
+    updated_invoice["id"] = str(updated_invoice["_id"])
+    del updated_invoice["_id"]
+    
+    return InvoiceResponse(**updated_invoice)
+
+@api_router.put("/invoices/{invoice_id}/status")
+async def update_invoice_status(invoice_id: str, status: str, current_user: dict = Depends(get_current_user)):
+    """Update invoice status."""
+    if status not in INVOICE_STATUSES:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {INVOICE_STATUSES}")
+    
+    try:
+        invoice = await db.invoices.find_one({"_id": ObjectId(invoice_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid invoice ID")
+    
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    update_data = {"status": status, "updated_at": datetime.utcnow()}
+    
+    if status == "Paid":
+        update_data["paid_date"] = datetime.utcnow()
+    
+    await db.invoices.update_one(
+        {"_id": ObjectId(invoice_id)},
+        {"$set": update_data}
+    )
+    
+    return {"message": f"Invoice status updated to {status}"}
+
+@api_router.delete("/invoices/{invoice_id}")
+async def delete_invoice(invoice_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete an invoice."""
+    try:
+        result = await db.invoices.delete_one({"_id": ObjectId(invoice_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid invoice ID")
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    return {"message": "Invoice deleted successfully"}
+
+@api_router.get("/invoices/stats/summary")
+async def get_invoice_stats(current_user: dict = Depends(get_current_user)):
+    """Get invoice statistics."""
+    # Count by status
+    pipeline = [
+        {"$group": {"_id": "$status", "count": {"$sum": 1}, "total": {"$sum": "$total"}}}
+    ]
+    stats = await db.invoices.aggregate(pipeline).to_list(100)
+    
+    status_breakdown = {item["_id"]: {"count": item["count"], "total": item["total"]} for item in stats}
+    
+    total_invoiced = sum(item.get("total", 0) for item in stats)
+    paid_amount = status_breakdown.get("Paid", {}).get("total", 0)
+    outstanding = total_invoiced - paid_amount
+    
+    return {
+        "total_invoices": sum(item["count"] for item in stats),
+        "total_invoiced": total_invoiced,
+        "paid_amount": paid_amount,
+        "outstanding": outstanding,
+        "status_breakdown": status_breakdown
+    }
+
 # ==================== RETURNING CUSTOMER LOOKUP ====================
 
 class CustomerLookupResponse(BaseModel):
