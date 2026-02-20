@@ -225,29 +225,34 @@ export const xeroAPI = {
 };
 
 // Damage Analysis API
-export interface DamageItem {
-  panel_number: number;
-  panel_name: string;
-  damage_type: string;
-  severity: string;
-  repair_method: string;
-  estimated_cost_min: number;
-  estimated_cost_max: number;
-  description: string;
-}
-
 export interface DamageAnalysisResponse {
   success: boolean;
-  damages: DamageItem[];
-  total_min: number;
-  total_max: number;
-  summary: string;
+  panels_detected: number[];
   message: string;
+}
+
+export interface PanelPricing {
+  panels: { [key: number]: string };
+  pricing: { [key: number]: { [key: number]: number | null } };
 }
 
 export const damageAPI = {
   analyzeDamage: async (imageBase64: string): Promise<DamageAnalysisResponse> => {
     const response = await api.post('/analyze-damage', { image_base64: imageBase64 });
+    return response.data;
+  },
+  getPanelPricing: async (): Promise<PanelPricing> => {
+    const response = await api.get('/panel-pricing');
+    return response.data;
+  },
+  getPanelPrice: async (panelNumber: number, category: number): Promise<{
+    panel_number: number;
+    panel_name: string;
+    category: number;
+    price: number | null;
+    is_manual: boolean;
+  }> => {
+    const response = await api.get(`/panel-price/${panelNumber}/${category}`);
     return response.data;
   },
 };
@@ -256,11 +261,10 @@ export const damageAPI = {
 export interface QuoteLineItem {
   panel_number: number;
   panel_name: string;
-  description: string;
-  repair_method: string;
-  cost_min: number;
-  cost_max: number;
-  final_cost?: number;
+  category: number;
+  price: number;
+  is_manual_price: boolean;
+  description?: string;
 }
 
 export interface Quote {
@@ -275,9 +279,7 @@ export interface Quote {
   vehicle_year?: number;
   vehicle_color?: string;
   line_items: QuoteLineItem[];
-  total_min: number;
-  total_max: number;
-  final_total?: number;
+  total: number;
   notes?: string;
   photos: string[];
   status: string;
