@@ -372,6 +372,52 @@ export default function JobDetailScreen() {
           ))}
         </View>
 
+        {/* Activity Log */}
+        {job.activity_log && job.activity_log.length > 0 && (
+          <View style={styles.card}>
+            <View style={styles.cardHeader}>
+              <Ionicons name="list" size={20} color="#8B5CF6" />
+              <Text style={styles.cardTitle}>Activity Log</Text>
+            </View>
+            {job.activity_log.slice().reverse().map((entry: any, index: number) => (
+              <View key={index} style={styles.activityItem}>
+                <View style={[styles.activityIcon, { 
+                  backgroundColor: 
+                    entry.action === 'created' ? '#D1FAE5' :
+                    entry.action === 'status_changed' ? '#DBEAFE' :
+                    entry.action === 'photo_added' ? '#FCE7F3' :
+                    entry.action === 'photo_deleted' ? '#FEE2E2' :
+                    '#F3F4F6'
+                }]}>
+                  <Ionicons 
+                    name={
+                      entry.action === 'created' ? 'add-circle' :
+                      entry.action === 'status_changed' ? 'swap-horizontal' :
+                      entry.action === 'photo_added' ? 'camera' :
+                      entry.action === 'photo_deleted' ? 'trash' :
+                      'create'
+                    } 
+                    size={14} 
+                    color={
+                      entry.action === 'created' ? '#10B981' :
+                      entry.action === 'status_changed' ? '#3B82F6' :
+                      entry.action === 'photo_added' ? '#EC4899' :
+                      entry.action === 'photo_deleted' ? '#EF4444' :
+                      '#6B7280'
+                    } 
+                  />
+                </View>
+                <View style={styles.activityContent}>
+                  <Text style={styles.activityText}>{entry.details}</Text>
+                  <Text style={styles.activityMeta}>
+                    {format(new Date(entry.timestamp), 'dd MMM yyyy, HH:mm')} • {entry.employee}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
         {/* Create Invoice Button */}
         <TouchableOpacity
           style={styles.createInvoiceButton}
