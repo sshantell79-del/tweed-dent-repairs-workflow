@@ -114,6 +114,38 @@ export default function ProfileScreen() {
           <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
         </TouchableOpacity>
 
+        {/* Xero Integration */}
+        <TouchableOpacity 
+          style={styles.menuItem} 
+          onPress={xeroStatus?.connected ? handleDisconnectXero : handleConnectXero}
+          disabled={connecting || xeroLoading}
+        >
+          <View style={[styles.menuIcon, { backgroundColor: xeroStatus?.connected ? '#DCFCE7' : '#F0F9FF' }]}>
+            {xeroLoading || connecting ? (
+              <ActivityIndicator size="small" color="#0D9488" />
+            ) : (
+              <Ionicons 
+                name={xeroStatus?.connected ? "checkmark-circle" : "cloud-upload-outline"} 
+                size={20} 
+                color={xeroStatus?.connected ? "#10B981" : "#0D9488"} 
+              />
+            )}
+          </View>
+          <View style={styles.menuTextContainer}>
+            <Text style={styles.menuText}>
+              {xeroStatus?.connected ? 'Xero Connected' : 'Connect Xero'}
+            </Text>
+            {xeroStatus?.connected && xeroStatus.tenant_name && (
+              <Text style={styles.menuSubtext}>{xeroStatus.tenant_name}</Text>
+            )}
+          </View>
+          {xeroStatus?.connected ? (
+            <Ionicons name="close-circle-outline" size={20} color="#EF4444" />
+          ) : (
+            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+          )}
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.menuItem}>
           <View style={[styles.menuIcon, { backgroundColor: '#EFF6FF' }]}>
             <Ionicons name="settings-outline" size={20} color="#3B82F6" />
