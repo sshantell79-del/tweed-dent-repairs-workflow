@@ -278,20 +278,32 @@ export default function InvoicesScreen() {
             </View>
 
             {selectedInvoice && (
-              <ScrollView style={styles.modalBody}>
+              <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+                {/* Customer Info */}
                 <View style={styles.modalSection}>
                   <Text style={styles.modalSectionTitle}>Customer</Text>
                   <Text style={styles.modalText}>{selectedInvoice.customer_name}</Text>
+                  {selectedInvoice.customer_phone && (
+                    <View style={styles.contactRow}>
+                      <Ionicons name="call-outline" size={14} color="#6B7280" />
+                      <Text style={styles.modalSubtext}>{selectedInvoice.customer_phone}</Text>
+                    </View>
+                  )}
                   {selectedInvoice.customer_email && (
-                    <Text style={styles.modalSubtext}>{selectedInvoice.customer_email}</Text>
+                    <View style={styles.contactRow}>
+                      <Ionicons name="mail-outline" size={14} color="#6B7280" />
+                      <Text style={styles.modalSubtext}>{selectedInvoice.customer_email}</Text>
+                    </View>
+                  )}
+                  {selectedInvoice.customer_address && (
+                    <View style={styles.contactRow}>
+                      <Ionicons name="location-outline" size={14} color="#6B7280" />
+                      <Text style={styles.modalSubtext}>{selectedInvoice.customer_address}</Text>
+                    </View>
                   )}
                 </View>
 
-                <View style={styles.modalSection}>
-                  <Text style={styles.modalSectionTitle}>Amount</Text>
-                  <Text style={styles.modalAmount}>${selectedInvoice.total.toLocaleString()}</Text>
-                </View>
-
+                {/* Status */}
                 <View style={styles.modalSection}>
                   <Text style={styles.modalSectionTitle}>Status</Text>
                   <View style={[styles.statusBadgeLarge, { backgroundColor: STATUS_COLORS[selectedInvoice.status] + '20' }]}>
@@ -301,6 +313,49 @@ export default function InvoicesScreen() {
                   </View>
                 </View>
 
+                {/* Line Items */}
+                <View style={styles.modalSection}>
+                  <Text style={styles.modalSectionTitle}>Line Items</Text>
+                  <View style={styles.lineItemsContainer}>
+                    {selectedInvoice.line_items && selectedInvoice.line_items.map((item, index) => (
+                      <View key={index} style={styles.lineItem}>
+                        <View style={styles.lineItemLeft}>
+                          <Text style={styles.lineItemDesc}>{item.description}</Text>
+                          <Text style={styles.lineItemQty}>
+                            {item.quantity} × ${item.unit_price.toFixed(2)}
+                          </Text>
+                        </View>
+                        <Text style={styles.lineItemTotal}>${item.total.toFixed(2)}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Totals */}
+                <View style={styles.totalsSection}>
+                  <View style={styles.totalRow}>
+                    <Text style={styles.totalLabel}>Subtotal</Text>
+                    <Text style={styles.totalValue}>${selectedInvoice.subtotal.toFixed(2)}</Text>
+                  </View>
+                  <View style={styles.totalRow}>
+                    <Text style={styles.totalLabel}>GST (10%)</Text>
+                    <Text style={styles.totalValue}>${selectedInvoice.gst.toFixed(2)}</Text>
+                  </View>
+                  <View style={[styles.totalRow, styles.grandTotalRow]}>
+                    <Text style={styles.grandTotalLabel}>Total</Text>
+                    <Text style={styles.grandTotalValue}>${selectedInvoice.total.toFixed(2)}</Text>
+                  </View>
+                </View>
+
+                {/* Notes */}
+                {selectedInvoice.notes && (
+                  <View style={styles.modalSection}>
+                    <Text style={styles.modalSectionTitle}>Notes</Text>
+                    <Text style={styles.notesText}>{selectedInvoice.notes}</Text>
+                  </View>
+                )}
+
+                {/* Dates */}
                 <View style={styles.modalSection}>
                   <Text style={styles.modalSectionTitle}>Dates</Text>
                   <View style={styles.dateRow}>
@@ -309,7 +364,9 @@ export default function InvoicesScreen() {
                   </View>
                   <View style={styles.dateRow}>
                     <Text style={styles.dateLabel}>Due:</Text>
-                    <Text style={styles.dateValue}>{format(new Date(selectedInvoice.due_date), 'dd MMM yyyy')}</Text>
+                    <Text style={[styles.dateValue, new Date(selectedInvoice.due_date) < new Date() && selectedInvoice.status !== 'Paid' && { color: '#EF4444' }]}>
+                      {format(new Date(selectedInvoice.due_date), 'dd MMM yyyy')}
+                    </Text>
                   </View>
                   {selectedInvoice.paid_date && (
                     <View style={styles.dateRow}>
