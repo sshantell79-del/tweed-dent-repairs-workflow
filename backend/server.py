@@ -1412,62 +1412,91 @@ PANEL_MAP = {
     2: "Right Front Door", 
     3: "Right Rear Door",
     4: "Right Rear Quarter",
-    5: "Rear Bumper (Right)",
-    6: "Rear Bumper (Left)",
+    5: "Tailgate Upper",
+    6: "Tailgate/Boot",
     7: "Left Rear Quarter",
     8: "Left Rear Door",
     9: "Left Front Door",
     10: "Left Front Guard",
-    11: "Bonnet/Hood",
-    12: "Roof",
-    13: "Boot/Trunk Lid",
-    14: "Front Bumper (Centre)",
-    15: "Front Bumper (Left)",
-    16: "Front Bumper (Right)",
-    17: "Windscreen",
-    18: "Rear Window",
-    19: "Right Front Wheel",
-    20: "Right Rear Wheel",
-    21: "Left Front Wheel",
-    22: "Left Rear Wheel",
+    11: "Bonnet",
+    13: "Right Rail",
+    14: "Roof",
+    15: "Left Rail",
+    16: "R&R",
 }
 
-# Repair types and base costs (AUD)
-REPAIR_COSTS = {
-    "pdr": {"name": "Paintless Dent Repair", "min": 150, "max": 350},
-    "minor_repair": {"name": "Minor Panel Repair & Respray", "min": 350, "max": 650},
-    "major_repair": {"name": "Major Panel Repair & Respray", "min": 650, "max": 1200},
-    "panel_replacement": {"name": "Panel Replacement", "min": 800, "max": 2500},
-    "bumper_repair": {"name": "Bumper Repair", "min": 250, "max": 600},
-    "bumper_replacement": {"name": "Bumper Replacement", "min": 500, "max": 1500},
-    "scratch_repair": {"name": "Scratch Repair & Touch-up", "min": 150, "max": 400},
-    "glass_replacement": {"name": "Glass Replacement", "min": 300, "max": 800},
+# Category-based pricing matrix (Panel -> Category -> Price)
+# Category 5 or higher = manual entry (None)
+PANEL_PRICING = {
+    # Guards and Doors (1,2,3,4,7,8,9,10)
+    1: {1: 150, 2: 250, 3: 350, 4: 450, 5: None},
+    2: {1: 150, 2: 250, 3: 350, 4: 450, 5: None},
+    3: {1: 150, 2: 250, 3: 350, 4: 450, 5: None},
+    4: {1: 150, 2: 250, 3: 350, 4: 450, 5: None},
+    7: {1: 150, 2: 250, 3: 350, 4: 450, 5: None},
+    8: {1: 150, 2: 250, 3: 350, 4: 450, 5: None},
+    9: {1: 150, 2: 250, 3: 350, 4: 450, 5: None},
+    10: {1: 150, 2: 250, 3: 350, 4: 450, 5: None},
+    # Tailgate (5,6)
+    5: {1: 100, 2: 200, 3: 300, 4: 400, 5: None},
+    6: {1: 100, 2: 200, 3: 300, 4: 400, 5: None},
+    # Bonnet (11)
+    11: {1: 350, 2: 550, 3: 800, 4: 1100, 5: None},
+    # Rails (13,15)
+    13: {1: 150, 2: 250, 3: 350, 4: 450, 5: None},
+    15: {1: 150, 2: 250, 3: 350, 4: 450, 5: None},
+    # Roof (14)
+    14: {1: 600, 2: 850, 3: 1050, 4: 1400, 5: None},
+    # R&R (16) - only cat 1 and 2 have set prices
+    16: {1: 350, 2: 450, 3: None, 4: None, 5: None},
 }
 
 class DamageItem(BaseModel):
     panel_number: int
     panel_name: str
-    damage_type: str
-    severity: str
-    repair_method: str
-    estimated_cost_min: float
-    estimated_cost_max: float
-    description: str
+    category: int = 1
+    price: Optional[float] = None
+    is_manual_price: bool = False
+    description: Optional[str] = None
 
 class DamageAnalysisResponse(BaseModel):
     success: bool
-    damages: List[DamageItem]
-    total_min: float
-    total_max: float
-    summary: str
+    panels_detected: List[int]
     message: str
 
 class DamageAnalysisRequest(BaseModel):
     image_base64: str
 
+@api_router.get("/panel-pricing")
+async def get_panel_pricing(current_user: dict = Depends(get_current_user)):
+    """Get the panel pricing matrix."""
+    return {
+        "panels": PANEL_MAP,
+        "pricing": PANEL_PRICING
+    }
+
+@api_router.get("/panel-price/{panel_number}/{category}")
+async def get_panel_price(panel_number: int, category: int, current_user: dict = Depends(get_current_user)):
+    """Get price for a specific panel and category."""
+    if panel_number not in PANEL_PRICING:
+        raise HTTPException(status_code=404, detail="Panel not found")
+    
+    panel_prices = PANEL_PRICING[panel_number]
+    if category not in panel_prices:
+        raise HTTPException(status_code=400, detail="Invalid category")
+    
+    price = panel_prices.get(category)
+    return {
+        "panel_number": panel_number,
+        "panel_name": PANEL_MAP.get(panel_number, f"Panel {panel_number}"),
+        "category": category,
+        "price": price,
+        "is_manual": price is None
+    }
+
 @api_router.post("/analyze-damage", response_model=DamageAnalysisResponse)
 async def analyze_damage(request: DamageAnalysisRequest, current_user: dict = Depends(get_current_user)):
-    """Analyze damage photo and identify affected panels with cost estimates."""
+    """Analyze damage photo and identify affected panel numbers."""
     try:
         from emergentintegrations.llm.chat import LlmChat, UserMessage, SystemMessage, ImageContent
         
@@ -1479,33 +1508,25 @@ async def analyze_damage(request: DamageAnalysisRequest, current_user: dict = De
         # Build the prompt for damage analysis
         panel_list = "\n".join([f"{num}: {name}" for num, name in PANEL_MAP.items()])
         
-        system_prompt = f"""You are an expert automotive damage assessor for a smash repairs business in Australia.
+        system_prompt = f"""You are an expert automotive damage assessor for a smash repairs business.
 
-Analyze the vehicle damage in the image and identify ALL damaged panels using this standard numbering system:
+Analyze the vehicle damage in the image and identify which panels are damaged using this numbering system:
 
 {panel_list}
 
-For each damaged area, provide:
-1. Panel number (from the list above)
-2. Damage type (dent, scratch, crack, crease, hole, paint damage, glass damage)
-3. Severity (minor, moderate, severe)
-4. Recommended repair method (pdr, minor_repair, major_repair, panel_replacement, bumper_repair, bumper_replacement, scratch_repair, glass_replacement)
+IMPORTANT: Only return the panel NUMBERS that show visible damage.
 
 Respond in this exact JSON format:
 {{
-  "damages": [
-    {{
-      "panel_number": 1,
-      "damage_type": "dent",
-      "severity": "moderate",
-      "repair_method": "minor_repair",
-      "notes": "30cm dent with minor paint cracking"
-    }}
-  ],
-  "summary": "Brief overall damage summary"
+  "panels": [1, 4, 11],
+  "notes": "Brief description of what you see"
 }}
 
-Be thorough - identify ALL visible damage. If you cannot see clear damage, return an empty damages array."""
+If you cannot identify any damage or panels, return:
+{{
+  "panels": [],
+  "notes": "No damage visible"
+}}"""
 
         # Create the message with image
         image_data = request.image_base64
@@ -1520,11 +1541,11 @@ Be thorough - identify ALL visible damage. If you cannot see clear damage, retur
                     image=image_data,
                     media_type="image/jpeg"
                 ),
-                "Analyze this vehicle damage photo and identify all damaged panels with their panel numbers."
+                "Identify the damaged panel numbers in this photo."
             ])
         ]
         
-        response = await chat.send_async(messages=messages, max_tokens=2000)
+        response = await chat.send_async(messages=messages, max_tokens=500)
         response_text = response.content
         
         # Clean the response to extract JSON
@@ -1533,74 +1554,30 @@ Be thorough - identify ALL visible damage. If you cannot see clear damage, retur
         if not json_match:
             return DamageAnalysisResponse(
                 success=False,
-                damages=[],
-                total_min=0,
-                total_max=0,
-                summary="",
+                panels_detected=[],
                 message="Could not analyze the image. Please try with a clearer photo."
             )
         
         analysis = json.loads(json_match.group())
+        panels = analysis.get("panels", [])
+        notes = analysis.get("notes", "")
         
-        # Process the damages
-        damage_items = []
-        total_min = 0
-        total_max = 0
+        # Filter to only valid panel numbers
+        valid_panels = [p for p in panels if p in PANEL_MAP]
         
-        for dmg in analysis.get("damages", []):
-            panel_num = dmg.get("panel_number", 0)
-            panel_name = PANEL_MAP.get(panel_num, f"Panel {panel_num}")
-            damage_type = dmg.get("damage_type", "damage")
-            severity = dmg.get("severity", "moderate")
-            repair_method = dmg.get("repair_method", "minor_repair")
-            notes = dmg.get("notes", "")
-            
-            # Get cost range
-            cost_info = REPAIR_COSTS.get(repair_method, REPAIR_COSTS["minor_repair"])
-            
-            # Adjust cost based on severity
-            severity_multiplier = {"minor": 0.7, "moderate": 1.0, "severe": 1.4}.get(severity, 1.0)
-            cost_min = cost_info["min"] * severity_multiplier
-            cost_max = cost_info["max"] * severity_multiplier
-            
-            total_min += cost_min
-            total_max += cost_max
-            
-            # Build description
-            description = f"{panel_num} - {panel_name}: {severity.capitalize()} {damage_type}"
-            if notes:
-                description += f" - {notes}"
-            
-            damage_items.append(DamageItem(
-                panel_number=panel_num,
-                panel_name=panel_name,
-                damage_type=damage_type,
-                severity=severity,
-                repair_method=cost_info["name"],
-                estimated_cost_min=round(cost_min, 2),
-                estimated_cost_max=round(cost_max, 2),
-                description=description
-            ))
-        
-        summary = analysis.get("summary", f"Identified {len(damage_items)} damaged panel(s)")
-        
-        if not damage_items:
+        if not valid_panels:
             return DamageAnalysisResponse(
                 success=True,
-                damages=[],
-                total_min=0,
-                total_max=0,
-                summary="No visible damage detected",
-                message="No damage was identified in this photo. Try taking a photo closer to the damaged area."
+                panels_detected=[],
+                message=notes or "No damage panels identified in this photo."
             )
+        
+        panel_names = [f"{p} - {PANEL_MAP[p]}" for p in valid_panels]
         
         return DamageAnalysisResponse(
             success=True,
-            damages=damage_items,
-            total_min=round(total_min, 2),
-            total_max=round(total_max, 2),
-            summary=summary,
-            message=f"Identified {len(damage_items)} damaged area(s). Estimated repair: ${total_min:,.0f} - ${total_max:,.0f}"
+            panels_detected=valid_panels,
+            message=f"Detected damage on: {', '.join(panel_names)}"
         )
         
     except ImportError:
@@ -1609,20 +1586,14 @@ Be thorough - identify ALL visible damage. If you cannot see clear damage, retur
         logger.error(f"JSON parsing error: {str(e)}")
         return DamageAnalysisResponse(
             success=False,
-            damages=[],
-            total_min=0,
-            total_max=0,
-            summary="",
+            panels_detected=[],
             message="Could not parse damage analysis. Please try again."
         )
     except Exception as e:
         logger.error(f"Damage analysis error: {str(e)}")
         return DamageAnalysisResponse(
             success=False,
-            damages=[],
-            total_min=0,
-            total_max=0,
-            summary="",
+            panels_detected=[],
             message=f"Error analyzing damage: {str(e)}"
         )
 
