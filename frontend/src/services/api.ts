@@ -111,6 +111,43 @@ export const customersAPI = {
   },
 };
 
+// Invoice APIs
+export const invoicesAPI = {
+  getAll: async (status?: string, search?: string): Promise<any[]> => {
+    const params: any = {};
+    if (status && status !== 'All') params.status = status;
+    if (search) params.search = search;
+    const response = await api.get('/invoices', { params });
+    return response.data;
+  },
+  getOne: async (id: string): Promise<any> => {
+    const response = await api.get(`/invoices/${id}`);
+    return response.data;
+  },
+  create: async (invoiceData: any): Promise<any> => {
+    const response = await api.post('/invoices', invoiceData);
+    return response.data;
+  },
+  createFromJob: async (jobId: string): Promise<any> => {
+    const response = await api.post(`/invoices/from-job/${jobId}`);
+    return response.data;
+  },
+  update: async (id: string, invoiceData: any): Promise<any> => {
+    const response = await api.put(`/invoices/${id}`, invoiceData);
+    return response.data;
+  },
+  updateStatus: async (id: string, status: string): Promise<void> => {
+    await api.put(`/invoices/${id}/status?status=${status}`);
+  },
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/invoices/${id}`);
+  },
+  getStats: async (): Promise<any> => {
+    const response = await api.get('/invoices/stats/summary');
+    return response.data;
+  },
+};
+
 // Plate Scanning API
 export const scanAPI = {
   scanPlate: async (imageBase64: string): Promise<{ 
