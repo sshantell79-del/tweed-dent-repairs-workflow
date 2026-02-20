@@ -146,6 +146,63 @@ class CustomerResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+# ==================== INVOICE MODELS ====================
+
+INVOICE_STATUSES = ["Draft", "Sent", "Paid", "Overdue", "Cancelled"]
+
+class InvoiceLineItem(BaseModel):
+    description: str
+    quantity: float = 1
+    unit_price: float
+    total: float
+
+class InvoiceCreate(BaseModel):
+    job_id: str
+    customer_name: str
+    customer_email: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_address: Optional[str] = None
+    line_items: List[InvoiceLineItem] = []
+    subtotal: float
+    gst: float = 0
+    total: float
+    notes: Optional[str] = None
+    due_days: int = 14
+
+class InvoiceUpdate(BaseModel):
+    customer_name: Optional[str] = None
+    customer_email: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_address: Optional[str] = None
+    line_items: Optional[List[InvoiceLineItem]] = None
+    subtotal: Optional[float] = None
+    gst: Optional[float] = None
+    total: Optional[float] = None
+    notes: Optional[str] = None
+    status: Optional[str] = None
+    paid_date: Optional[datetime] = None
+
+class InvoiceResponse(BaseModel):
+    id: str
+    invoice_number: str
+    job_id: str
+    customer_name: str
+    customer_email: Optional[str] = None
+    customer_phone: Optional[str] = None
+    customer_address: Optional[str] = None
+    line_items: List[InvoiceLineItem] = []
+    subtotal: float
+    gst: float
+    total: float
+    notes: Optional[str] = None
+    status: str
+    issue_date: datetime
+    due_date: datetime
+    paid_date: Optional[datetime] = None
+    created_by: str
+    created_at: datetime
+    updated_at: datetime
+
 # Photo Model
 class Photo(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
