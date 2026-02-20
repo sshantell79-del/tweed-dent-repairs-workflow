@@ -166,7 +166,7 @@ export default function InvoicesScreen() {
         </View>
 
         <View style={styles.invoiceFooter}>
-          <Text style={styles.totalLabel}>Total</Text>
+          <Text style={styles.listTotalLabel}>Total</Text>
           <Text style={styles.totalAmount}>${item.total.toLocaleString()}</Text>
         </View>
       </TouchableOpacity>
