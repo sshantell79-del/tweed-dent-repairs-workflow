@@ -582,7 +582,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#F3F4F6',
   },
-  totalLabel: {
+  listTotalLabel: {
     fontSize: 12,
     color: '#6B7280',
   },
