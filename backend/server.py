@@ -594,6 +594,8 @@ async def update_job_status(job_id: str, status_update: StatusUpdate, current_us
         raise HTTPException(status_code=404, detail="Job not found")
     
     now = datetime.utcnow()
+    old_status = job.get("status")
+    
     status_entry = {
         "status": status_update.status,
         "timestamp": now.isoformat(),
@@ -601,11 +603,20 @@ async def update_job_status(job_id: str, status_update: StatusUpdate, current_us
         "notes": status_update.notes or f"Status changed to {status_update.status}"
     }
     
+    activity_entry = {
+        "action": "status_changed",
+        "employee": current_user["username"],
+        "timestamp": now.isoformat(),
+        "details": f"Status changed from {old_status} to {status_update.status}",
+        "old_value": old_status,
+        "new_value": status_update.status
+    }
+    
     await db.jobs.update_one(
         {"_id": ObjectId(job_id)},
         {
-            "$set": {"status": status_update.status, "updated_at": now},
-            "$push": {"status_history": status_entry}
+            "$set": {"status": status_update.status, "updated_at": now, "updated_by": current_user["username"]},
+            "$push": {"status_history": status_entry, "activity_log": activity_entry}
         }
     )
     
@@ -625,17 +636,25 @@ async def add_photo(job_id: str, photo_data: PhotoAdd, current_user: dict = Depe
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     
+    now = datetime.utcnow()
     photo = Photo(
         base64_data=photo_data.base64_data,
         caption=photo_data.caption,
         photo_type=photo_data.photo_type
     )
     
+    activity_entry = {
+        "action": "photo_added",
+        "employee": current_user["username"],
+        "timestamp": now.isoformat(),
+        "details": f"Added {photo_data.photo_type} photo"
+    }
+    
     await db.jobs.update_one(
         {"_id": ObjectId(job_id)},
         {
-            "$push": {"photos": photo.dict()},
-            "$set": {"updated_at": datetime.utcnow()}
+            "$push": {"photos": photo.dict(), "activity_log": activity_entry},
+            "$set": {"updated_at": now, "updated_by": current_user["username"]}
         }
     )
     
@@ -655,11 +674,20 @@ async def delete_photo(job_id: str, photo_id: str, current_user: dict = Depends(
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     
+    now = datetime.utcnow()
+    activity_entry = {
+        "action": "photo_deleted",
+        "employee": current_user["username"],
+        "timestamp": now.isoformat(),
+        "details": "Deleted a photo"
+    }
+    
     await db.jobs.update_one(
         {"_id": ObjectId(job_id)},
         {
             "$pull": {"photos": {"id": photo_id}},
-            "$set": {"updated_at": datetime.utcnow()}
+            "$push": {"activity_log": activity_entry},
+            "$set": {"updated_at": now, "updated_by": current_user["username"]}
         }
     )
     
