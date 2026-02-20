@@ -90,10 +90,26 @@ export const scanAPI = {
     model: string | null;
     color: string | null;
     year: number | null;
+    returning_customer: boolean;
+    owner_info: { name: string; phone: string; email?: string; address?: string } | null;
+    insurance_info: { company: string; policy_number?: string; claim_number?: string } | null;
+    previous_jobs_count: number;
     success: boolean; 
     message: string 
   }> => {
     const response = await api.post('/scan-plate', { image_base64: imageBase64 });
+    return response.data;
+  },
+  lookupRego: async (registration: string): Promise<{
+    found: boolean;
+    registration: string | null;
+    car_info: any;
+    owner_info: any;
+    insurance_info: any;
+    previous_jobs_count: number;
+    message: string;
+  }> => {
+    const response = await api.get(`/lookup-rego/${registration}`);
     return response.data;
   },
 };
