@@ -27,13 +27,26 @@ const STATUS_COLORS: { [key: string]: string } = {
   Cancelled: '#9CA3AF',
 };
 
+interface LineItem {
+  description: string;
+  quantity: number;
+  unit_price: number;
+  total: number;
+}
+
 interface Invoice {
   id: string;
   invoice_number: string;
   job_id: string;
   customer_name: string;
   customer_email?: string;
-  total: float;
+  customer_phone?: string;
+  customer_address?: string;
+  line_items: LineItem[];
+  subtotal: number;
+  gst: number;
+  total: number;
+  notes?: string;
   status: string;
   issue_date: string;
   due_date: string;
