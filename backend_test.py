@@ -298,14 +298,14 @@ def test_invoice_apis():
         log_test("Get Single Invoice", "FAIL", "Could not retrieve specific invoice")
     
     # 5. UPDATE Invoice Status to "Sent"
-    response = make_request("PUT", f"/invoices/{invoice_id}/status", params={"status": "Sent"}, expect_status=200)
+    response = make_request("PUT", f"/invoices/{invoice_id}/status?status=Sent", expect_status=200)
     if response and "updated" in response.get("message", "").lower():
         log_test("Update Status to Sent", "PASS", "Invoice status updated to Sent")
     else:
         log_test("Update Status to Sent", "FAIL", "Could not update status to Sent")
     
     # 6. UPDATE Invoice Status to "Paid" (should auto-set paid_date)
-    response = make_request("PUT", f"/invoices/{invoice_id}/status", params={"status": "Paid"}, expect_status=200)
+    response = make_request("PUT", f"/invoices/{invoice_id}/status?status=Paid", expect_status=200)
     if response and "updated" in response.get("message", "").lower():
         log_test("Update Status to Paid", "PASS", "Invoice status updated to Paid")
         
