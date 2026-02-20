@@ -1,22 +1,34 @@
 {
   "expo": {
-    "name": "frontend",
-    "slug": "frontend",
+    "name": "Tweed Dent Repairs",
+    "slug": "tweed-dent-repairs",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "frontend",
+    "scheme": "tweeddentrepairs",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "owner": "tweeddentrepairs",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tweeddentrepairs.workflow",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Take photos of vehicle damage for job records",
+        "NSPhotoLibraryUsageDescription": "Select damage photos from your gallery"
+      }
     },
     "android": {
+      "package": "com.tweeddentrepairs.workflow",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#000"
+        "backgroundColor": "#3B82F6"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -31,12 +43,24 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#000"
+          "backgroundColor": "#3B82F6"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Tweed Dent Repairs to access your photos for damage documentation",
+          "cameraPermission": "Allow Tweed Dent Repairs to use your camera for damage photos"
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id"
+      }
     }
   }
 }
