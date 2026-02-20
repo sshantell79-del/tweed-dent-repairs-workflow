@@ -109,6 +109,26 @@ export default function JobDetailScreen() {
     );
   };
 
+  const handleCreateInvoice = async () => {
+    if (!job) return;
+    setCreatingInvoice(true);
+    try {
+      const invoice = await invoicesAPI.createFromJob(job.id);
+      Alert.alert(
+        'Invoice Created!',
+        `Invoice ${invoice.invoice_number} has been created for $${invoice.total.toLocaleString()}`,
+        [
+          { text: 'View Invoices', onPress: () => router.push('/invoices') },
+          { text: 'OK' }
+        ]
+      );
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to create invoice');
+    } finally {
+      setCreatingInvoice(false);
+    }
+  };
+
   const handleDeleteJob = () => {
     Alert.alert(
       'Delete Job',
