@@ -1767,11 +1767,18 @@ async def convert_quote_to_job(quote_id: str, current_user: dict = Depends(get_c
         raise HTTPException(status_code=404, detail="Quote not found")
     
     # Build damage description from line items
-    damage_descriptions = [item["description"] for item in quote.get("line_items", [])]
+    damage_descriptions = []
+    for item in quote.get("line_items", []):
+        desc = f"{item['panel_number']} - {item['panel_name']}"
+        if item.get('description'):
+            desc += f": {item['description']}"
+        desc += f" (Cat {item['category']} - ${item['price']})"
+        damage_descriptions.append(desc)
+    
     description = "\n".join(damage_descriptions)
     
-    # Calculate estimate from line items
-    estimate = sum(item.get("final_cost") or item.get("cost_max", 0) for item in quote.get("line_items", []))
+    # Get total from quote
+    estimate = quote.get("total", 0)
     
     # Create job
     job_doc = {
