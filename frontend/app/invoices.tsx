@@ -650,7 +650,89 @@ const styles = StyleSheet.create({
   modalSubtext: {
     fontSize: 14,
     color: '#6B7280',
+    marginTop: 2,
+  },
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     marginTop: 4,
+  },
+  lineItemsContainer: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 12,
+  },
+  lineItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  lineItemLeft: {
+    flex: 1,
+    marginRight: 12,
+  },
+  lineItemDesc: {
+    fontSize: 14,
+    color: '#1F2937',
+    fontWeight: '500',
+  },
+  lineItemQty: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  lineItemTotal: {
+    fontSize: 14,
+    color: '#1F2937',
+    fontWeight: '600',
+  },
+  totalsSection: {
+    backgroundColor: '#F0FDF4',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 6,
+  },
+  totalLabel: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  totalValue: {
+    fontSize: 14,
+    color: '#1F2937',
+    fontWeight: '500',
+  },
+  grandTotalRow: {
+    borderTopWidth: 1,
+    borderTopColor: '#D1FAE5',
+    marginTop: 8,
+    paddingTop: 12,
+  },
+  grandTotalLabel: {
+    fontSize: 16,
+    color: '#1F2937',
+    fontWeight: '600',
+  },
+  grandTotalValue: {
+    fontSize: 20,
+    color: '#059669',
+    fontWeight: '700',
+  },
+  notesText: {
+    fontSize: 14,
+    color: '#6B7280',
+    backgroundColor: '#F9FAFB',
+    padding: 12,
+    borderRadius: 8,
+    lineHeight: 20,
   },
   modalAmount: {
     fontSize: 32,
