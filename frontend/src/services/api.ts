@@ -180,4 +180,48 @@ export const scanAPI = {
   },
 };
 
+// Xero Integration APIs
+export const xeroAPI = {
+  getStatus: async (): Promise<{
+    connected: boolean;
+    tenant_name?: string;
+    tenant_id?: string;
+    message: string;
+  }> => {
+    const response = await api.get('/xero/status');
+    return response.data;
+  },
+  getAuthUrl: async (): Promise<{
+    auth_url: string;
+    message: string;
+  }> => {
+    const response = await api.get('/xero/authorize');
+    return response.data;
+  },
+  syncInvoice: async (invoiceId: string): Promise<{
+    success: boolean;
+    xero_invoice_id?: string;
+    xero_invoice_number?: string;
+    message: string;
+  }> => {
+    const response = await api.post(`/xero/sync-invoice/${invoiceId}`);
+    return response.data;
+  },
+  syncContact: async (customerId: string): Promise<{
+    success: boolean;
+    xero_contact_id?: string;
+    message: string;
+  }> => {
+    const response = await api.post(`/xero/sync-contact/${customerId}`);
+    return response.data;
+  },
+  disconnect: async (): Promise<{
+    success: boolean;
+    message: string;
+  }> => {
+    const response = await api.delete('/xero/disconnect');
+    return response.data;
+  },
+};
+
 export default api;
