@@ -1602,11 +1602,10 @@ If you cannot identify any damage or panels, return:
 class QuoteLineItem(BaseModel):
     panel_number: int
     panel_name: str
-    description: str
-    repair_method: str
-    cost_min: float
-    cost_max: float
-    final_cost: Optional[float] = None
+    category: int  # 1-5
+    price: float  # Set price or manual entry
+    is_manual_price: bool = False
+    description: Optional[str] = None
 
 class QuoteCreate(BaseModel):
     customer_name: str
@@ -1624,9 +1623,8 @@ class QuoteCreate(BaseModel):
 @api_router.post("/quotes")
 async def create_quote(quote: QuoteCreate, current_user: dict = Depends(get_current_user)):
     """Create a new quote."""
-    # Calculate totals
-    total_min = sum(item.cost_min for item in quote.line_items)
-    total_max = sum(item.cost_max for item in quote.line_items)
+    # Calculate total from line items
+    total = sum(item.price for item in quote.line_items)
     
     # Generate quote number
     count = await db.quotes.count_documents({})
@@ -1643,9 +1641,7 @@ async def create_quote(quote: QuoteCreate, current_user: dict = Depends(get_curr
         "vehicle_year": quote.vehicle_year,
         "vehicle_color": quote.vehicle_color,
         "line_items": [item.dict() for item in quote.line_items],
-        "total_min": total_min,
-        "total_max": total_max,
-        "final_total": None,
+        "total": total,
         "notes": quote.notes,
         "photos": quote.photos,
         "status": "Draft",
