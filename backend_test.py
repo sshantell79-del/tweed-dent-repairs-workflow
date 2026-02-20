@@ -381,8 +381,7 @@ def test_error_handling():
         if response:
             invoice_id = response["id"]
             # Try invalid status
-            response = make_request("PUT", f"/invoices/{invoice_id}/status", 
-                                 params={"status": "InvalidStatus"}, expect_status=400)
+            response = make_request("PUT", f"/invoices/{invoice_id}/status?status=InvalidStatus", expect_status=400)
             if response is None:
                 log_test("Invalid Invoice Status", "PASS", "Correctly rejected invalid status")
             else:
