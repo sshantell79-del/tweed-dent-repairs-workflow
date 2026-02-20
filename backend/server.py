@@ -1404,6 +1404,458 @@ ONLY output the JSON object, nothing else."""
             message=f"Error scanning plate: {str(e)}"
         )
 
+# ==================== DAMAGE ANALYSIS ====================
+
+# Standard panel numbering for smash repairs
+PANEL_MAP = {
+    1: "Right Front Guard",
+    2: "Right Front Door", 
+    3: "Right Rear Door",
+    4: "Right Rear Quarter",
+    5: "Rear Bumper (Right)",
+    6: "Rear Bumper (Left)",
+    7: "Left Rear Quarter",
+    8: "Left Rear Door",
+    9: "Left Front Door",
+    10: "Left Front Guard",
+    11: "Bonnet/Hood",
+    12: "Roof",
+    13: "Boot/Trunk Lid",
+    14: "Front Bumper (Centre)",
+    15: "Front Bumper (Left)",
+    16: "Front Bumper (Right)",
+    17: "Windscreen",
+    18: "Rear Window",
+    19: "Right Front Wheel",
+    20: "Right Rear Wheel",
+    21: "Left Front Wheel",
+    22: "Left Rear Wheel",
+}
+
+# Repair types and base costs (AUD)
+REPAIR_COSTS = {
+    "pdr": {"name": "Paintless Dent Repair", "min": 150, "max": 350},
+    "minor_repair": {"name": "Minor Panel Repair & Respray", "min": 350, "max": 650},
+    "major_repair": {"name": "Major Panel Repair & Respray", "min": 650, "max": 1200},
+    "panel_replacement": {"name": "Panel Replacement", "min": 800, "max": 2500},
+    "bumper_repair": {"name": "Bumper Repair", "min": 250, "max": 600},
+    "bumper_replacement": {"name": "Bumper Replacement", "min": 500, "max": 1500},
+    "scratch_repair": {"name": "Scratch Repair & Touch-up", "min": 150, "max": 400},
+    "glass_replacement": {"name": "Glass Replacement", "min": 300, "max": 800},
+}
+
+class DamageItem(BaseModel):
+    panel_number: int
+    panel_name: str
+    damage_type: str
+    severity: str
+    repair_method: str
+    estimated_cost_min: float
+    estimated_cost_max: float
+    description: str
+
+class DamageAnalysisResponse(BaseModel):
+    success: bool
+    damages: List[DamageItem]
+    total_min: float
+    total_max: float
+    summary: str
+    message: str
+
+class DamageAnalysisRequest(BaseModel):
+    image_base64: str
+
+@api_router.post("/analyze-damage", response_model=DamageAnalysisResponse)
+async def analyze_damage(request: DamageAnalysisRequest, current_user: dict = Depends(get_current_user)):
+    """Analyze damage photo and identify affected panels with cost estimates."""
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage, SystemMessage, ImageContent
+        
+        chat = LlmChat(
+            api_key=os.environ.get('EMERGENT_LLM_KEY'),
+            model="gpt-4o"
+        )
+        
+        # Build the prompt for damage analysis
+        panel_list = "\n".join([f"{num}: {name}" for num, name in PANEL_MAP.items()])
+        
+        system_prompt = f"""You are an expert automotive damage assessor for a smash repairs business in Australia.
+
+Analyze the vehicle damage in the image and identify ALL damaged panels using this standard numbering system:
+
+{panel_list}
+
+For each damaged area, provide:
+1. Panel number (from the list above)
+2. Damage type (dent, scratch, crack, crease, hole, paint damage, glass damage)
+3. Severity (minor, moderate, severe)
+4. Recommended repair method (pdr, minor_repair, major_repair, panel_replacement, bumper_repair, bumper_replacement, scratch_repair, glass_replacement)
+
+Respond in this exact JSON format:
+{{
+  "damages": [
+    {{
+      "panel_number": 1,
+      "damage_type": "dent",
+      "severity": "moderate",
+      "repair_method": "minor_repair",
+      "notes": "30cm dent with minor paint cracking"
+    }}
+  ],
+  "summary": "Brief overall damage summary"
+}}
+
+Be thorough - identify ALL visible damage. If you cannot see clear damage, return an empty damages array."""
+
+        # Create the message with image
+        image_data = request.image_base64
+        if ',' in image_data:
+            image_data = image_data.split(',')[1]
+        
+        messages = [
+            SystemMessage(content=system_prompt),
+            UserMessage(content=[
+                ImageContent(
+                    image_type="base64",
+                    image=image_data,
+                    media_type="image/jpeg"
+                ),
+                "Analyze this vehicle damage photo and identify all damaged panels with their panel numbers."
+            ])
+        ]
+        
+        response = await chat.send_async(messages=messages, max_tokens=2000)
+        response_text = response.content
+        
+        # Clean the response to extract JSON
+        import json
+        json_match = re.search(r'\{[\s\S]*\}', response_text)
+        if not json_match:
+            return DamageAnalysisResponse(
+                success=False,
+                damages=[],
+                total_min=0,
+                total_max=0,
+                summary="",
+                message="Could not analyze the image. Please try with a clearer photo."
+            )
+        
+        analysis = json.loads(json_match.group())
+        
+        # Process the damages
+        damage_items = []
+        total_min = 0
+        total_max = 0
+        
+        for dmg in analysis.get("damages", []):
+            panel_num = dmg.get("panel_number", 0)
+            panel_name = PANEL_MAP.get(panel_num, f"Panel {panel_num}")
+            damage_type = dmg.get("damage_type", "damage")
+            severity = dmg.get("severity", "moderate")
+            repair_method = dmg.get("repair_method", "minor_repair")
+            notes = dmg.get("notes", "")
+            
+            # Get cost range
+            cost_info = REPAIR_COSTS.get(repair_method, REPAIR_COSTS["minor_repair"])
+            
+            # Adjust cost based on severity
+            severity_multiplier = {"minor": 0.7, "moderate": 1.0, "severe": 1.4}.get(severity, 1.0)
+            cost_min = cost_info["min"] * severity_multiplier
+            cost_max = cost_info["max"] * severity_multiplier
+            
+            total_min += cost_min
+            total_max += cost_max
+            
+            # Build description
+            description = f"{panel_num} - {panel_name}: {severity.capitalize()} {damage_type}"
+            if notes:
+                description += f" - {notes}"
+            
+            damage_items.append(DamageItem(
+                panel_number=panel_num,
+                panel_name=panel_name,
+                damage_type=damage_type,
+                severity=severity,
+                repair_method=cost_info["name"],
+                estimated_cost_min=round(cost_min, 2),
+                estimated_cost_max=round(cost_max, 2),
+                description=description
+            ))
+        
+        summary = analysis.get("summary", f"Identified {len(damage_items)} damaged panel(s)")
+        
+        if not damage_items:
+            return DamageAnalysisResponse(
+                success=True,
+                damages=[],
+                total_min=0,
+                total_max=0,
+                summary="No visible damage detected",
+                message="No damage was identified in this photo. Try taking a photo closer to the damaged area."
+            )
+        
+        return DamageAnalysisResponse(
+            success=True,
+            damages=damage_items,
+            total_min=round(total_min, 2),
+            total_max=round(total_max, 2),
+            summary=summary,
+            message=f"Identified {len(damage_items)} damaged area(s). Estimated repair: ${total_min:,.0f} - ${total_max:,.0f}"
+        )
+        
+    except ImportError:
+        raise HTTPException(status_code=500, detail="Vision integration not available")
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON parsing error: {str(e)}")
+        return DamageAnalysisResponse(
+            success=False,
+            damages=[],
+            total_min=0,
+            total_max=0,
+            summary="",
+            message="Could not parse damage analysis. Please try again."
+        )
+    except Exception as e:
+        logger.error(f"Damage analysis error: {str(e)}")
+        return DamageAnalysisResponse(
+            success=False,
+            damages=[],
+            total_min=0,
+            total_max=0,
+            summary="",
+            message=f"Error analyzing damage: {str(e)}"
+        )
+
+# ==================== QUOTES ====================
+
+class QuoteLineItem(BaseModel):
+    panel_number: int
+    panel_name: str
+    description: str
+    repair_method: str
+    cost_min: float
+    cost_max: float
+    final_cost: Optional[float] = None
+
+class QuoteCreate(BaseModel):
+    customer_name: str
+    customer_phone: Optional[str] = None
+    customer_email: Optional[str] = None
+    vehicle_registration: Optional[str] = None
+    vehicle_make: Optional[str] = None
+    vehicle_model: Optional[str] = None
+    vehicle_year: Optional[int] = None
+    vehicle_color: Optional[str] = None
+    line_items: List[QuoteLineItem]
+    notes: Optional[str] = None
+    photos: List[str] = []
+
+@api_router.post("/quotes")
+async def create_quote(quote: QuoteCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new quote."""
+    # Calculate totals
+    total_min = sum(item.cost_min for item in quote.line_items)
+    total_max = sum(item.cost_max for item in quote.line_items)
+    
+    # Generate quote number
+    count = await db.quotes.count_documents({})
+    quote_number = f"Q-{count + 1:05d}"
+    
+    quote_doc = {
+        "quote_number": quote_number,
+        "customer_name": quote.customer_name,
+        "customer_phone": quote.customer_phone,
+        "customer_email": quote.customer_email,
+        "vehicle_registration": quote.vehicle_registration,
+        "vehicle_make": quote.vehicle_make,
+        "vehicle_model": quote.vehicle_model,
+        "vehicle_year": quote.vehicle_year,
+        "vehicle_color": quote.vehicle_color,
+        "line_items": [item.dict() for item in quote.line_items],
+        "total_min": total_min,
+        "total_max": total_max,
+        "final_total": None,
+        "notes": quote.notes,
+        "photos": quote.photos,
+        "status": "Draft",
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+        "created_by": current_user["username"]
+    }
+    
+    result = await db.quotes.insert_one(quote_doc)
+    quote_doc["id"] = str(result.inserted_id)
+    quote_doc["_id"] = str(result.inserted_id)
+    
+    return quote_doc
+
+@api_router.get("/quotes")
+async def get_quotes(
+    status: Optional[str] = None,
+    search: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all quotes."""
+    query = {}
+    if status and status != "All":
+        query["status"] = status
+    if search:
+        query["$or"] = [
+            {"customer_name": {"$regex": search, "$options": "i"}},
+            {"vehicle_registration": {"$regex": search, "$options": "i"}},
+            {"quote_number": {"$regex": search, "$options": "i"}}
+        ]
+    
+    quotes = await db.quotes.find(query).sort("created_at", -1).to_list(100)
+    for quote in quotes:
+        quote["id"] = str(quote["_id"])
+        del quote["_id"]
+    return quotes
+
+@api_router.get("/quotes/{quote_id}")
+async def get_quote(quote_id: str, current_user: dict = Depends(get_current_user)):
+    """Get a single quote."""
+    try:
+        quote = await db.quotes.find_one({"_id": ObjectId(quote_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid quote ID")
+    
+    if not quote:
+        raise HTTPException(status_code=404, detail="Quote not found")
+    
+    quote["id"] = str(quote["_id"])
+    del quote["_id"]
+    return quote
+
+@api_router.put("/quotes/{quote_id}")
+async def update_quote(quote_id: str, quote: QuoteCreate, current_user: dict = Depends(get_current_user)):
+    """Update a quote."""
+    try:
+        existing = await db.quotes.find_one({"_id": ObjectId(quote_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid quote ID")
+    
+    if not existing:
+        raise HTTPException(status_code=404, detail="Quote not found")
+    
+    total_min = sum(item.cost_min for item in quote.line_items)
+    total_max = sum(item.cost_max for item in quote.line_items)
+    
+    update_data = {
+        "customer_name": quote.customer_name,
+        "customer_phone": quote.customer_phone,
+        "customer_email": quote.customer_email,
+        "vehicle_registration": quote.vehicle_registration,
+        "vehicle_make": quote.vehicle_make,
+        "vehicle_model": quote.vehicle_model,
+        "vehicle_year": quote.vehicle_year,
+        "vehicle_color": quote.vehicle_color,
+        "line_items": [item.dict() for item in quote.line_items],
+        "total_min": total_min,
+        "total_max": total_max,
+        "notes": quote.notes,
+        "photos": quote.photos,
+        "updated_at": datetime.utcnow()
+    }
+    
+    await db.quotes.update_one({"_id": ObjectId(quote_id)}, {"$set": update_data})
+    
+    updated = await db.quotes.find_one({"_id": ObjectId(quote_id)})
+    updated["id"] = str(updated["_id"])
+    del updated["_id"]
+    return updated
+
+@api_router.put("/quotes/{quote_id}/status")
+async def update_quote_status(
+    quote_id: str,
+    status: str = Query(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Update quote status."""
+    valid_statuses = ["Draft", "Sent", "Accepted", "Declined", "Expired"]
+    if status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+    
+    try:
+        quote = await db.quotes.find_one({"_id": ObjectId(quote_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid quote ID")
+    
+    if not quote:
+        raise HTTPException(status_code=404, detail="Quote not found")
+    
+    update_data = {"status": status, "updated_at": datetime.utcnow()}
+    
+    await db.quotes.update_one({"_id": ObjectId(quote_id)}, {"$set": update_data})
+    
+    return {"success": True, "message": f"Quote status updated to {status}"}
+
+@api_router.post("/quotes/{quote_id}/convert-to-job")
+async def convert_quote_to_job(quote_id: str, current_user: dict = Depends(get_current_user)):
+    """Convert an accepted quote to a job."""
+    try:
+        quote = await db.quotes.find_one({"_id": ObjectId(quote_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid quote ID")
+    
+    if not quote:
+        raise HTTPException(status_code=404, detail="Quote not found")
+    
+    # Build damage description from line items
+    damage_descriptions = [item["description"] for item in quote.get("line_items", [])]
+    description = "\n".join(damage_descriptions)
+    
+    # Calculate estimate from line items
+    estimate = sum(item.get("final_cost") or item.get("cost_max", 0) for item in quote.get("line_items", []))
+    
+    # Create job
+    job_doc = {
+        "registration": quote.get("vehicle_registration"),
+        "make": quote.get("vehicle_make"),
+        "model": quote.get("vehicle_model"),
+        "year": quote.get("vehicle_year"),
+        "color": quote.get("vehicle_color"),
+        "vin": None,
+        "owner_name": quote.get("customer_name"),
+        "owner_phone": quote.get("customer_phone"),
+        "owner_email": quote.get("customer_email"),
+        "insurance_company": None,
+        "policy_number": None,
+        "claim_number": None,
+        "description": description,
+        "status": "Received",
+        "estimate": estimate,
+        "photos": quote.get("photos", []),
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+        "created_by": current_user["username"],
+        "quote_id": str(quote["_id"])
+    }
+    
+    result = await db.jobs.insert_one(job_doc)
+    
+    # Update quote status
+    await db.quotes.update_one(
+        {"_id": ObjectId(quote_id)},
+        {"$set": {"status": "Accepted", "job_id": str(result.inserted_id), "updated_at": datetime.utcnow()}}
+    )
+    
+    job_doc["id"] = str(result.inserted_id)
+    return {"success": True, "job_id": str(result.inserted_id), "message": "Quote converted to job successfully"}
+
+@api_router.delete("/quotes/{quote_id}")
+async def delete_quote(quote_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a quote."""
+    try:
+        result = await db.quotes.delete_one({"_id": ObjectId(quote_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid quote ID")
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Quote not found")
+    
+    return {"success": True, "message": "Quote deleted"}
+
 # ==================== XERO INTEGRATION ====================
 
 import httpx
