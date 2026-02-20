@@ -1404,6 +1404,452 @@ ONLY output the JSON object, nothing else."""
             message=f"Error scanning plate: {str(e)}"
         )
 
+# ==================== XERO INTEGRATION ====================
+
+import httpx
+import secrets
+
+# Xero OAuth2 Configuration
+XERO_CLIENT_ID = os.environ.get('XERO_CLIENT_ID', '')
+XERO_CLIENT_SECRET = os.environ.get('XERO_CLIENT_SECRET', '')
+XERO_REDIRECT_URI = os.environ.get('XERO_REDIRECT_URI', '')
+XERO_AUTH_URL = "https://login.xero.com/identity/connect/authorize"
+XERO_TOKEN_URL = "https://identity.xero.com/connect/token"
+XERO_API_BASE = "https://api.xero.com"
+XERO_SCOPES = "offline_access accounting.transactions accounting.contacts openid profile email"
+
+# In-memory token storage (in production, use database)
+xero_tokens_store = {}
+xero_states_store = {}
+
+class XeroTokens(BaseModel):
+    access_token: str
+    refresh_token: str
+    expires_at: datetime
+    tenant_id: Optional[str] = None
+    tenant_name: Optional[str] = None
+
+@api_router.get("/xero/status")
+async def get_xero_status(current_user: dict = Depends(get_current_user)):
+    """Check if Xero is connected."""
+    user_id = str(current_user["_id"])
+    tokens = xero_tokens_store.get(user_id)
+    
+    if not tokens:
+        return {
+            "connected": False,
+            "message": "Not connected to Xero"
+        }
+    
+    # Check if token is expired
+    if datetime.utcnow() > tokens.expires_at:
+        # Try to refresh
+        try:
+            await refresh_xero_token(user_id)
+            tokens = xero_tokens_store.get(user_id)
+        except:
+            return {
+                "connected": False,
+                "message": "Token expired, please reconnect"
+            }
+    
+    return {
+        "connected": True,
+        "tenant_name": tokens.tenant_name,
+        "tenant_id": tokens.tenant_id,
+        "message": f"Connected to {tokens.tenant_name}"
+    }
+
+@api_router.get("/xero/authorize")
+async def xero_authorize(current_user: dict = Depends(get_current_user)):
+    """Start Xero OAuth2 authorization flow."""
+    if not XERO_CLIENT_ID:
+        raise HTTPException(status_code=500, detail="Xero not configured")
+    
+    # Generate state for CSRF protection
+    state = secrets.token_urlsafe(32)
+    user_id = str(current_user["_id"])
+    xero_states_store[state] = {
+        "user_id": user_id,
+        "created_at": datetime.utcnow()
+    }
+    
+    # Build authorization URL
+    auth_params = {
+        "response_type": "code",
+        "client_id": XERO_CLIENT_ID,
+        "redirect_uri": XERO_REDIRECT_URI,
+        "scope": XERO_SCOPES,
+        "state": state,
+    }
+    
+    auth_url = f"{XERO_AUTH_URL}?" + "&".join([f"{k}={v}" for k, v in auth_params.items()])
+    
+    return {
+        "auth_url": auth_url,
+        "message": "Redirect user to this URL to authorize"
+    }
+
+@api_router.get("/xero/callback")
+async def xero_callback(code: str = None, state: str = None, error: str = None):
+    """Handle Xero OAuth2 callback."""
+    from fastapi.responses import HTMLResponse
+    
+    if error:
+        return HTMLResponse(content=f"""
+            <html><body>
+            <h2>Xero Connection Failed</h2>
+            <p>Error: {error}</p>
+            <p>You can close this window.</p>
+            </body></html>
+        """)
+    
+    if not state or state not in xero_states_store:
+        return HTMLResponse(content="""
+            <html><body>
+            <h2>Invalid Request</h2>
+            <p>Invalid or expired state parameter.</p>
+            </body></html>
+        """)
+    
+    state_data = xero_states_store.pop(state)
+    user_id = state_data["user_id"]
+    
+    # Exchange code for tokens
+    try:
+        async with httpx.AsyncClient() as client:
+            token_data = {
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": XERO_REDIRECT_URI,
+                "client_id": XERO_CLIENT_ID,
+                "client_secret": XERO_CLIENT_SECRET,
+            }
+            
+            response = await client.post(
+                XERO_TOKEN_URL,
+                data=token_data,
+                headers={"Content-Type": "application/x-www-form-urlencoded"},
+            )
+            response.raise_for_status()
+            tokens = response.json()
+            
+            access_token = tokens.get("access_token")
+            refresh_token = tokens.get("refresh_token")
+            expires_in = tokens.get("expires_in", 1800)
+            
+            # Get tenant information
+            connections_response = await client.get(
+                f"{XERO_API_BASE}/connections",
+                headers={"Authorization": f"Bearer {access_token}"}
+            )
+            connections = connections_response.json()
+            
+            if connections and len(connections) > 0:
+                tenant = connections[0]
+                tenant_id = tenant.get("tenantId")
+                tenant_name = tenant.get("tenantName")
+            else:
+                tenant_id = None
+                tenant_name = "Unknown"
+            
+            # Store tokens
+            xero_tokens_store[user_id] = XeroTokens(
+                access_token=access_token,
+                refresh_token=refresh_token,
+                expires_at=datetime.utcnow() + timedelta(seconds=expires_in),
+                tenant_id=tenant_id,
+                tenant_name=tenant_name
+            )
+            
+            logger.info(f"Xero connected for user {user_id}, tenant: {tenant_name}")
+            
+            return HTMLResponse(content=f"""
+                <html><body>
+                <h2>Successfully Connected to Xero!</h2>
+                <p>Connected to: <strong>{tenant_name}</strong></p>
+                <p>You can close this window and return to the app.</p>
+                <script>
+                    setTimeout(function() {{
+                        window.close();
+                    }}, 3000);
+                </script>
+                </body></html>
+            """)
+            
+    except Exception as e:
+        logger.error(f"Xero callback error: {str(e)}")
+        return HTMLResponse(content=f"""
+            <html><body>
+            <h2>Connection Failed</h2>
+            <p>Error: {str(e)}</p>
+            <p>Please try again.</p>
+            </body></html>
+        """)
+
+async def refresh_xero_token(user_id: str):
+    """Refresh Xero access token."""
+    tokens = xero_tokens_store.get(user_id)
+    if not tokens:
+        raise ValueError("No tokens found")
+    
+    async with httpx.AsyncClient() as client:
+        token_data = {
+            "grant_type": "refresh_token",
+            "refresh_token": tokens.refresh_token,
+            "client_id": XERO_CLIENT_ID,
+            "client_secret": XERO_CLIENT_SECRET,
+        }
+        
+        response = await client.post(
+            XERO_TOKEN_URL,
+            data=token_data,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+        )
+        response.raise_for_status()
+        new_tokens = response.json()
+        
+        xero_tokens_store[user_id] = XeroTokens(
+            access_token=new_tokens.get("access_token"),
+            refresh_token=new_tokens.get("refresh_token"),
+            expires_at=datetime.utcnow() + timedelta(seconds=new_tokens.get("expires_in", 1800)),
+            tenant_id=tokens.tenant_id,
+            tenant_name=tokens.tenant_name
+        )
+
+async def get_valid_xero_token(user_id: str) -> str:
+    """Get a valid Xero access token, refreshing if necessary."""
+    tokens = xero_tokens_store.get(user_id)
+    if not tokens:
+        raise ValueError("Not connected to Xero")
+    
+    # Refresh if expiring within 5 minutes
+    if datetime.utcnow() > tokens.expires_at - timedelta(minutes=5):
+        await refresh_xero_token(user_id)
+        tokens = xero_tokens_store.get(user_id)
+    
+    return tokens.access_token, tokens.tenant_id
+
+class XeroInvoiceSync(BaseModel):
+    invoice_id: str
+
+@api_router.post("/xero/sync-invoice/{invoice_id}")
+async def sync_invoice_to_xero(invoice_id: str, current_user: dict = Depends(get_current_user)):
+    """Sync an invoice to Xero."""
+    user_id = str(current_user["_id"])
+    
+    # Check Xero connection
+    tokens = xero_tokens_store.get(user_id)
+    if not tokens or not tokens.tenant_id:
+        raise HTTPException(status_code=400, detail="Not connected to Xero. Please connect first.")
+    
+    # Get the invoice
+    try:
+        invoice = await db.invoices.find_one({"_id": ObjectId(invoice_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid invoice ID")
+    
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Invoice not found")
+    
+    try:
+        access_token, tenant_id = await get_valid_xero_token(user_id)
+        
+        # First, check if contact exists in Xero or create one
+        contact_name = invoice.get("customer_name", "Unknown Customer")
+        
+        async with httpx.AsyncClient() as client:
+            # Search for existing contact
+            search_response = await client.get(
+                f"{XERO_API_BASE}/api.xro/2.0/Contacts",
+                params={"where": f'Name=="{contact_name}"'},
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Xero-tenant-id": tenant_id,
+                    "Accept": "application/json"
+                }
+            )
+            
+            contacts_data = search_response.json()
+            contacts = contacts_data.get("Contacts", [])
+            
+            if contacts:
+                contact_id = contacts[0].get("ContactID")
+            else:
+                # Create new contact
+                new_contact = {
+                    "Contacts": [{
+                        "Name": contact_name,
+                        "EmailAddress": invoice.get("customer_email"),
+                        "Phones": [{"PhoneType": "DEFAULT", "PhoneNumber": invoice.get("customer_phone")}] if invoice.get("customer_phone") else []
+                    }]
+                }
+                
+                create_response = await client.post(
+                    f"{XERO_API_BASE}/api.xro/2.0/Contacts",
+                    json=new_contact,
+                    headers={
+                        "Authorization": f"Bearer {access_token}",
+                        "Xero-tenant-id": tenant_id,
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    }
+                )
+                created_contact = create_response.json()
+                contact_id = created_contact.get("Contacts", [{}])[0].get("ContactID")
+            
+            # Build line items for Xero
+            xero_line_items = []
+            for item in invoice.get("line_items", []):
+                xero_line_items.append({
+                    "Description": item.get("description", "Service"),
+                    "Quantity": item.get("quantity", 1),
+                    "UnitAmount": item.get("unit_price", 0),
+                    "AccountCode": "200",  # Default sales account
+                    "TaxType": "OUTPUT"  # GST on sales
+                })
+            
+            # Create invoice in Xero
+            xero_invoice = {
+                "Invoices": [{
+                    "Type": "ACCREC",  # Accounts Receivable (sales invoice)
+                    "Contact": {"ContactID": contact_id},
+                    "LineItems": xero_line_items,
+                    "InvoiceNumber": invoice.get("invoice_number"),
+                    "Reference": f"Job ID: {invoice.get('job_id')}",
+                    "DueDate": invoice.get("due_date").strftime("%Y-%m-%d") if invoice.get("due_date") else None,
+                    "Status": "DRAFT",  # Create as draft first
+                    "LineAmountTypes": "Exclusive"  # Amounts are exclusive of GST
+                }]
+            }
+            
+            invoice_response = await client.post(
+                f"{XERO_API_BASE}/api.xro/2.0/Invoices",
+                json=xero_invoice,
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Xero-tenant-id": tenant_id,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                }
+            )
+            
+            if invoice_response.status_code != 200:
+                error_detail = invoice_response.text
+                logger.error(f"Xero invoice creation failed: {error_detail}")
+                raise HTTPException(status_code=400, detail=f"Xero error: {error_detail}")
+            
+            xero_result = invoice_response.json()
+            xero_invoice_id = xero_result.get("Invoices", [{}])[0].get("InvoiceID")
+            xero_invoice_number = xero_result.get("Invoices", [{}])[0].get("InvoiceNumber")
+            
+            # Update our invoice with Xero reference
+            await db.invoices.update_one(
+                {"_id": ObjectId(invoice_id)},
+                {"$set": {
+                    "xero_invoice_id": xero_invoice_id,
+                    "xero_synced_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                }}
+            )
+            
+            logger.info(f"Invoice {invoice_id} synced to Xero as {xero_invoice_id}")
+            
+            return {
+                "success": True,
+                "xero_invoice_id": xero_invoice_id,
+                "xero_invoice_number": xero_invoice_number,
+                "message": f"Invoice synced to Xero successfully"
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Xero sync error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to sync to Xero: {str(e)}")
+
+@api_router.post("/xero/sync-contact/{customer_id}")
+async def sync_contact_to_xero(customer_id: str, current_user: dict = Depends(get_current_user)):
+    """Sync a customer/contact to Xero."""
+    user_id = str(current_user["_id"])
+    
+    tokens = xero_tokens_store.get(user_id)
+    if not tokens or not tokens.tenant_id:
+        raise HTTPException(status_code=400, detail="Not connected to Xero. Please connect first.")
+    
+    try:
+        customer = await db.customers.find_one({"_id": ObjectId(customer_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid customer ID")
+    
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    
+    try:
+        access_token, tenant_id = await get_valid_xero_token(user_id)
+        
+        async with httpx.AsyncClient() as client:
+            new_contact = {
+                "Contacts": [{
+                    "Name": customer.get("name"),
+                    "EmailAddress": customer.get("email"),
+                    "Phones": [{"PhoneType": "DEFAULT", "PhoneNumber": customer.get("phone")}] if customer.get("phone") else [],
+                    "Addresses": [{
+                        "AddressType": "STREET",
+                        "AddressLine1": customer.get("address")
+                    }] if customer.get("address") else []
+                }]
+            }
+            
+            response = await client.post(
+                f"{XERO_API_BASE}/api.xro/2.0/Contacts",
+                json=new_contact,
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Xero-tenant-id": tenant_id,
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                }
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=400, detail=f"Xero error: {response.text}")
+            
+            result = response.json()
+            xero_contact_id = result.get("Contacts", [{}])[0].get("ContactID")
+            
+            # Update customer with Xero reference
+            await db.customers.update_one(
+                {"_id": ObjectId(customer_id)},
+                {"$set": {
+                    "xero_contact_id": xero_contact_id,
+                    "xero_synced_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                }}
+            )
+            
+            return {
+                "success": True,
+                "xero_contact_id": xero_contact_id,
+                "message": f"Contact synced to Xero successfully"
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Xero contact sync error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to sync contact: {str(e)}")
+
+@api_router.delete("/xero/disconnect")
+async def disconnect_xero(current_user: dict = Depends(get_current_user)):
+    """Disconnect from Xero."""
+    user_id = str(current_user["_id"])
+    
+    if user_id in xero_tokens_store:
+        del xero_tokens_store[user_id]
+    
+    return {"success": True, "message": "Disconnected from Xero"}
+
 # Root endpoint
 @api_router.get("/")
 async def root():
