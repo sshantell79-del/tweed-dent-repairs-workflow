@@ -47,6 +47,14 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.menuSection}>
+        <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/invoices')}>
+          <View style={[styles.menuIcon, { backgroundColor: '#D1FAE5' }]}>
+            <Ionicons name="document-text-outline" size={20} color="#10B981" />
+          </View>
+          <Text style={styles.menuText}>Invoices</Text>
+          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.menuItem}>
           <View style={[styles.menuIcon, { backgroundColor: '#EFF6FF' }]}>
             <Ionicons name="settings-outline" size={20} color="#3B82F6" />
@@ -64,18 +72,10 @@ export default function ProfileScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem}>
-          <View style={[styles.menuIcon, { backgroundColor: '#D1FAE5' }]}>
-            <Ionicons name="help-circle-outline" size={20} color="#10B981" />
+          <View style={[styles.menuIcon, { backgroundColor: '#EDE9FE' }]}>
+            <Ionicons name="help-circle-outline" size={20} color="#8B5CF6" />
           </View>
           <Text style={styles.menuText}>Help & Support</Text>
-          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.menuItem}>
-          <View style={[styles.menuIcon, { backgroundColor: '#EDE9FE' }]}>
-            <Ionicons name="information-circle-outline" size={20} color="#8B5CF6" />
-          </View>
-          <Text style={styles.menuText}>About</Text>
           <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
         </TouchableOpacity>
       </View>
