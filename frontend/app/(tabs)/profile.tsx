@@ -273,6 +273,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#374151',
   },
+  menuTextContainer: {
+    flex: 1,
+  },
+  menuSubtext: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 2,
+  },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
