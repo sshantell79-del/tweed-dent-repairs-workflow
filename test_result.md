@@ -293,9 +293,7 @@ backend:
         comment: "✅ PASSED comprehensive testing: Create invoice from job (200) with auto line items generation, Get invoices (200), Filter by status (200), Get single invoice (200), Update status to Sent/Paid (200), Auto-set paid_date when marked as Paid, Invoice statistics (200), Delete invoice (200). GST calculation (10%) and total calculations working correctly. FIXED minor issue with Query parameter in status update endpoint."
 
 test_plan:
-  current_focus:
-    - "Customer/Contact CRUD API"
-    - "Invoice CRUD API"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
