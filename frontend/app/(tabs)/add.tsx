@@ -109,14 +109,37 @@ export default function AddJobScreen() {
       try {
         const response = await scanAPI.scanPlate(result.assets[0].base64);
         if (response.success) {
-          // Auto-fill all detected fields
+          // Auto-fill vehicle details
           if (response.registration) setRegistration(response.registration);
           if (response.make) setMake(response.make);
           if (response.model) setModel(response.model);
           if (response.color) setColor(response.color);
           if (response.year) setYear(response.year.toString());
           
-          Alert.alert('Vehicle Detected!', response.message);
+          // Auto-fill owner details if returning customer
+          if (response.returning_customer && response.owner_info) {
+            if (response.owner_info.name) setOwnerName(response.owner_info.name);
+            if (response.owner_info.phone) setOwnerPhone(response.owner_info.phone);
+            if (response.owner_info.email) setOwnerEmail(response.owner_info.email);
+            if (response.owner_info.address) setOwnerAddress(response.owner_info.address);
+          }
+          
+          // Auto-fill insurance if available
+          if (response.returning_customer && response.insurance_info) {
+            if (response.insurance_info.company) setInsuranceCompany(response.insurance_info.company);
+            if (response.insurance_info.policy_number) setPolicyNumber(response.insurance_info.policy_number);
+            if (response.insurance_info.claim_number) setClaimNumber(response.insurance_info.claim_number);
+          }
+          
+          // Show appropriate message
+          if (response.returning_customer) {
+            Alert.alert(
+              '🔄 Returning Customer!', 
+              `${response.message}\n\nOwner and insurance details have been auto-filled from previous records.`
+            );
+          } else {
+            Alert.alert('Vehicle Detected!', response.message);
+          }
         } else {
           Alert.alert('Scan Failed', response.message || 'Could not identify the vehicle. Please try again or enter manually.');
         }
@@ -150,14 +173,37 @@ export default function AddJobScreen() {
       try {
         const response = await scanAPI.scanPlate(result.assets[0].base64);
         if (response.success) {
-          // Auto-fill all detected fields
+          // Auto-fill vehicle details
           if (response.registration) setRegistration(response.registration);
           if (response.make) setMake(response.make);
           if (response.model) setModel(response.model);
           if (response.color) setColor(response.color);
           if (response.year) setYear(response.year.toString());
           
-          Alert.alert('Vehicle Detected!', response.message);
+          // Auto-fill owner details if returning customer
+          if (response.returning_customer && response.owner_info) {
+            if (response.owner_info.name) setOwnerName(response.owner_info.name);
+            if (response.owner_info.phone) setOwnerPhone(response.owner_info.phone);
+            if (response.owner_info.email) setOwnerEmail(response.owner_info.email);
+            if (response.owner_info.address) setOwnerAddress(response.owner_info.address);
+          }
+          
+          // Auto-fill insurance if available
+          if (response.returning_customer && response.insurance_info) {
+            if (response.insurance_info.company) setInsuranceCompany(response.insurance_info.company);
+            if (response.insurance_info.policy_number) setPolicyNumber(response.insurance_info.policy_number);
+            if (response.insurance_info.claim_number) setClaimNumber(response.insurance_info.claim_number);
+          }
+          
+          // Show appropriate message
+          if (response.returning_customer) {
+            Alert.alert(
+              '🔄 Returning Customer!', 
+              `${response.message}\n\nOwner and insurance details have been auto-filled from previous records.`
+            );
+          } else {
+            Alert.alert('Vehicle Detected!', response.message);
+          }
         } else {
           Alert.alert('Scan Failed', response.message || 'Could not identify the vehicle. Please try again or enter manually.');
         }
