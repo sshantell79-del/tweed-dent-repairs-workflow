@@ -597,6 +597,183 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
 async def get_statuses():
     return {"statuses": JOB_STATUSES}
 
+# ==================== CUSTOMER/CONTACT ENDPOINTS ====================
+
+@api_router.get("/customers", response_model=List[CustomerResponse])
+async def get_customers(
+    search: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all customers with optional search."""
+    query = {}
+    
+    if search:
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"phone": {"$regex": search, "$options": "i"}},
+            {"email": {"$regex": search, "$options": "i"}},
+            {"vehicles.registration": {"$regex": search, "$options": "i"}}
+        ]
+    
+    customers = await db.customers.find(query).sort("name", 1).skip(skip).limit(limit).to_list(limit)
+    
+    result = []
+    for customer in customers:
+        customer["id"] = str(customer["_id"])
+        del customer["_id"]
+        
+        # Count jobs for this customer (by phone or by vehicle registrations)
+        jobs_count = 0
+        if customer.get("vehicles"):
+            regos = [v.get("registration") for v in customer.get("vehicles", []) if v.get("registration")]
+            if regos:
+                jobs_count = await db.jobs.count_documents({
+                    "car_info.registration": {"$in": regos}
+                })
+        
+        customer["jobs_count"] = jobs_count
+        result.append(CustomerResponse(**customer))
+    
+    return result
+
+@api_router.post("/customers", response_model=CustomerResponse)
+async def create_customer(customer_data: CustomerCreate, current_user: dict = Depends(get_current_user)):
+    """Create a new customer."""
+    now = datetime.utcnow()
+    
+    customer_doc = {
+        "name": customer_data.name,
+        "phone": customer_data.phone,
+        "email": customer_data.email,
+        "address": customer_data.address,
+        "vehicles": [v.dict() for v in customer_data.vehicles] if customer_data.vehicles else [],
+        "insurance_company": customer_data.insurance_company,
+        "insurance_policy": customer_data.insurance_policy,
+        "notes": customer_data.notes,
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    result = await db.customers.insert_one(customer_doc)
+    customer_doc["id"] = str(result.inserted_id)
+    customer_doc["jobs_count"] = 0
+    
+    return CustomerResponse(**customer_doc)
+
+@api_router.get("/customers/{customer_id}", response_model=CustomerResponse)
+async def get_customer(customer_id: str, current_user: dict = Depends(get_current_user)):
+    """Get a single customer by ID."""
+    try:
+        customer = await db.customers.find_one({"_id": ObjectId(customer_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid customer ID")
+    
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    
+    customer["id"] = str(customer["_id"])
+    del customer["_id"]
+    
+    # Count jobs
+    jobs_count = 0
+    if customer.get("vehicles"):
+        regos = [v.get("registration") for v in customer.get("vehicles", []) if v.get("registration")]
+        if regos:
+            jobs_count = await db.jobs.count_documents({
+                "car_info.registration": {"$in": regos}
+            })
+    customer["jobs_count"] = jobs_count
+    
+    return CustomerResponse(**customer)
+
+@api_router.put("/customers/{customer_id}", response_model=CustomerResponse)
+async def update_customer(customer_id: str, customer_update: CustomerUpdate, current_user: dict = Depends(get_current_user)):
+    """Update a customer."""
+    try:
+        customer = await db.customers.find_one({"_id": ObjectId(customer_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid customer ID")
+    
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    
+    update_data = {}
+    update_dict = customer_update.dict(exclude_unset=True)
+    
+    for key, value in update_dict.items():
+        if value is not None:
+            if key == "vehicles":
+                update_data[key] = value
+            else:
+                update_data[key] = value
+    
+    update_data["updated_at"] = datetime.utcnow()
+    
+    await db.customers.update_one(
+        {"_id": ObjectId(customer_id)},
+        {"$set": update_data}
+    )
+    
+    updated_customer = await db.customers.find_one({"_id": ObjectId(customer_id)})
+    updated_customer["id"] = str(updated_customer["_id"])
+    del updated_customer["_id"]
+    
+    # Count jobs
+    jobs_count = 0
+    if updated_customer.get("vehicles"):
+        regos = [v.get("registration") for v in updated_customer.get("vehicles", []) if v.get("registration")]
+        if regos:
+            jobs_count = await db.jobs.count_documents({
+                "car_info.registration": {"$in": regos}
+            })
+    updated_customer["jobs_count"] = jobs_count
+    
+    return CustomerResponse(**updated_customer)
+
+@api_router.delete("/customers/{customer_id}")
+async def delete_customer(customer_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a customer."""
+    try:
+        result = await db.customers.delete_one({"_id": ObjectId(customer_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid customer ID")
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    
+    return {"message": "Customer deleted successfully"}
+
+@api_router.get("/customers/{customer_id}/jobs")
+async def get_customer_jobs(customer_id: str, current_user: dict = Depends(get_current_user)):
+    """Get all jobs for a customer."""
+    try:
+        customer = await db.customers.find_one({"_id": ObjectId(customer_id)})
+    except:
+        raise HTTPException(status_code=400, detail="Invalid customer ID")
+    
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    
+    # Get jobs by vehicle registrations
+    regos = [v.get("registration") for v in customer.get("vehicles", []) if v.get("registration")]
+    
+    if not regos:
+        return []
+    
+    jobs = await db.jobs.find({
+        "car_info.registration": {"$in": regos}
+    }).sort("created_at", -1).to_list(100)
+    
+    result = []
+    for job in jobs:
+        job["id"] = str(job["_id"])
+        del job["_id"]
+        result.append(job)
+    
+    return result
+
 # ==================== RETURNING CUSTOMER LOOKUP ====================
 
 class CustomerLookupResponse(BaseModel):
