@@ -103,6 +103,49 @@ class InsuranceInfo(BaseModel):
     contact_person: Optional[str] = None
     contact_phone: Optional[str] = None
 
+# ==================== CUSTOMER/CONTACT MODELS ====================
+
+class VehicleRecord(BaseModel):
+    registration: str
+    make: Optional[str] = None
+    model: Optional[str] = None
+    year: Optional[int] = None
+    color: Optional[str] = None
+
+class CustomerCreate(BaseModel):
+    name: str
+    phone: str
+    email: Optional[str] = None
+    address: Optional[str] = None
+    vehicles: Optional[List[VehicleRecord]] = []
+    insurance_company: Optional[str] = None
+    insurance_policy: Optional[str] = None
+    notes: Optional[str] = None
+
+class CustomerUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    address: Optional[str] = None
+    vehicles: Optional[List[VehicleRecord]] = None
+    insurance_company: Optional[str] = None
+    insurance_policy: Optional[str] = None
+    notes: Optional[str] = None
+
+class CustomerResponse(BaseModel):
+    id: str
+    name: str
+    phone: str
+    email: Optional[str] = None
+    address: Optional[str] = None
+    vehicles: List[VehicleRecord] = []
+    insurance_company: Optional[str] = None
+    insurance_policy: Optional[str] = None
+    notes: Optional[str] = None
+    jobs_count: int = 0
+    created_at: datetime
+    updated_at: datetime
+
 # Photo Model
 class Photo(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
