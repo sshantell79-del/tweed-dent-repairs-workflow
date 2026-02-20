@@ -224,4 +224,99 @@ export const xeroAPI = {
   },
 };
 
+// Damage Analysis API
+export interface DamageItem {
+  panel_number: number;
+  panel_name: string;
+  damage_type: string;
+  severity: string;
+  repair_method: string;
+  estimated_cost_min: number;
+  estimated_cost_max: number;
+  description: string;
+}
+
+export interface DamageAnalysisResponse {
+  success: boolean;
+  damages: DamageItem[];
+  total_min: number;
+  total_max: number;
+  summary: string;
+  message: string;
+}
+
+export const damageAPI = {
+  analyzeDamage: async (imageBase64: string): Promise<DamageAnalysisResponse> => {
+    const response = await api.post('/analyze-damage', { image_base64: imageBase64 });
+    return response.data;
+  },
+};
+
+// Quotes API
+export interface QuoteLineItem {
+  panel_number: number;
+  panel_name: string;
+  description: string;
+  repair_method: string;
+  cost_min: number;
+  cost_max: number;
+  final_cost?: number;
+}
+
+export interface Quote {
+  id: string;
+  quote_number: string;
+  customer_name: string;
+  customer_phone?: string;
+  customer_email?: string;
+  vehicle_registration?: string;
+  vehicle_make?: string;
+  vehicle_model?: string;
+  vehicle_year?: number;
+  vehicle_color?: string;
+  line_items: QuoteLineItem[];
+  total_min: number;
+  total_max: number;
+  final_total?: number;
+  notes?: string;
+  photos: string[];
+  status: string;
+  created_at: string;
+  job_id?: string;
+}
+
+export const quotesAPI = {
+  getAll: async (status?: string, search?: string): Promise<Quote[]> => {
+    const params: any = {};
+    if (status && status !== 'All') params.status = status;
+    if (search) params.search = search;
+    const response = await api.get('/quotes', { params });
+    return response.data;
+  },
+  getById: async (id: string): Promise<Quote> => {
+    const response = await api.get(`/quotes/${id}`);
+    return response.data;
+  },
+  create: async (quote: Omit<Quote, 'id' | 'quote_number' | 'status' | 'created_at' | 'total_min' | 'total_max'>): Promise<Quote> => {
+    const response = await api.post('/quotes', quote);
+    return response.data;
+  },
+  update: async (id: string, quote: Partial<Quote>): Promise<Quote> => {
+    const response = await api.put(`/quotes/${id}`, quote);
+    return response.data;
+  },
+  updateStatus: async (id: string, status: string): Promise<{ success: boolean; message: string }> => {
+    const response = await api.put(`/quotes/${id}/status`, null, { params: { status } });
+    return response.data;
+  },
+  convertToJob: async (id: string): Promise<{ success: boolean; job_id: string; message: string }> => {
+    const response = await api.post(`/quotes/${id}/convert-to-job`);
+    return response.data;
+  },
+  delete: async (id: string): Promise<{ success: boolean; message: string }> => {
+    const response = await api.delete(`/quotes/${id}`);
+    return response.data;
+  },
+};
+
 export default api;
