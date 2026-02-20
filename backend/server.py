@@ -762,6 +762,47 @@ ONLY output the JSON object, nothing else."""
             except (ValueError, TypeError):
                 year = None
         
+        # Check for returning customer
+        returning_customer = False
+        owner_info = None
+        insurance_info = None
+        previous_jobs_count = 0
+        
+        if plate_number:
+            # Search for previous jobs with this registration
+            previous_jobs = await db.jobs.find({
+                "car_info.registration": {"$regex": f"^{plate_number}$", "$options": "i"}
+            }).sort("created_at", -1).to_list(100)
+            
+            if previous_jobs:
+                returning_customer = True
+                previous_jobs_count = len(previous_jobs)
+                
+                # Get owner info from previous jobs (find most complete)
+                for job in previous_jobs:
+                    job_owner = job.get("owner_info")
+                    if job_owner and job_owner.get("name") and job_owner.get("phone"):
+                        owner_info = job_owner
+                        break
+                
+                # Get insurance info if available
+                for job in previous_jobs:
+                    if job.get("insurance_info") and job.get("insurance_info", {}).get("company"):
+                        insurance_info = job.get("insurance_info")
+                        break
+                
+                # Also get car info from previous records if AI couldn't identify
+                if not make or not model:
+                    prev_car = previous_jobs[0].get("car_info", {})
+                    if not make:
+                        make = prev_car.get("make")
+                    if not model:
+                        model = prev_car.get("model")
+                    if not year:
+                        year = prev_car.get("year")
+                    if not color:
+                        color = prev_car.get("color")
+        
         # Build response message
         details_found = []
         if plate_number:
@@ -782,11 +823,20 @@ ONLY output the JSON object, nothing else."""
                 model=None,
                 color=None,
                 year=None,
+                returning_customer=False,
+                owner_info=None,
+                insurance_info=None,
+                previous_jobs_count=0,
                 success=False,
                 message="Could not identify the vehicle or read the plate. Please try again with a clearer photo."
             )
         
-        logger.info(f"Vehicle scan successful: {details_found}")
+        # Build message
+        message = f"Detected: {', '.join(details_found)}"
+        if returning_customer:
+            message = f"🔄 Returning Customer! {previous_jobs_count} previous job(s). " + message
+        
+        logger.info(f"Vehicle scan successful: {details_found}, returning_customer={returning_customer}")
         
         return PlateScanResponse(
             registration=plate_number,
@@ -794,8 +844,12 @@ ONLY output the JSON object, nothing else."""
             model=model,
             color=color,
             year=year,
+            returning_customer=returning_customer,
+            owner_info=owner_info,
+            insurance_info=insurance_info,
+            previous_jobs_count=previous_jobs_count,
             success=True,
-            message=f"Detected: {', '.join(details_found)}"
+            message=message
         )
         
     except ImportError:
