@@ -417,6 +417,14 @@ async def get_jobs(
 async def create_job(job_data: JobCreate, current_user: dict = Depends(get_current_user)):
     now = datetime.utcnow()
     
+    # Initial activity log entry
+    activity_log = [{
+        "action": "created",
+        "employee": current_user["username"],
+        "timestamp": now.isoformat(),
+        "details": "Job created"
+    }]
+    
     job_doc = {
         "car_info": job_data.car_info.dict(),
         "owner_info": job_data.owner_info.dict() if job_data.owner_info else None,
@@ -434,9 +442,11 @@ async def create_job(job_data: JobCreate, current_user: dict = Depends(get_curre
             "changed_by": current_user["username"],
             "notes": "Job created"
         }],
+        "activity_log": activity_log,
         "created_at": now,
         "updated_at": now,
-        "created_by": current_user["username"]
+        "created_by": current_user["username"],
+        "updated_by": current_user["username"]
     }
     
     result = await db.jobs.insert_one(job_doc)
