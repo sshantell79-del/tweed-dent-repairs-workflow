@@ -554,8 +554,8 @@ export default function AddJobScreen() {
           )}
 
           <View style={styles.buttonContainer}>
-            {/* Quick Create - only requires vehicle info */}
-            {(make && model && year && registration) && !ownerName && (
+            {/* Quick Create - always show when vehicle info is filled */}
+            {(make && model && year && registration) && (
               <TouchableOpacity
                 style={[styles.quickCreateButton, loading && styles.submitButtonDisabled]}
                 onPress={handleQuickCreate}
