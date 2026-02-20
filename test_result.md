@@ -264,27 +264,33 @@ agent_communication:
 backend:
   - task: "Customer/Contact CRUD API"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented customer endpoints: GET/POST /api/customers, GET/PUT/DELETE /api/customers/{id}, GET /api/customers/{id}/jobs"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED comprehensive testing: Create customer (200) with vehicles and insurance info, Get all customers (200), Get single customer (200), Search by name/phone (200), Update customer (200), Delete customer (200), Get customer jobs (200). Customer tracking by vehicle registrations working correctly."
 
   - task: "Invoice CRUD API"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Implemented invoice endpoints with GST calculation, status management, and create-from-job feature"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED comprehensive testing: Create invoice from job (200) with auto line items generation, Get invoices (200), Filter by status (200), Get single invoice (200), Update status to Sent/Paid (200), Auto-set paid_date when marked as Paid, Invoice statistics (200), Delete invoice (200). GST calculation (10%) and total calculations working correctly. FIXED minor issue with Query parameter in status update endpoint."
 
 test_plan:
   current_focus:
