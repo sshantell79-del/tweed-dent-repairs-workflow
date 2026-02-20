@@ -480,19 +480,34 @@ async def update_job(job_id: str, job_update: JobUpdate, current_user: dict = De
     
     update_data = {}
     update_dict = job_update.dict(exclude_unset=True)
+    now = datetime.utcnow()
+    activity_entries = []
     
     for key, value in update_dict.items():
         if value is not None:
             if key in ["car_info", "owner_info", "insurance_info"]:
                 update_data[key] = value
+                activity_entries.append({
+                    "action": "updated",
+                    "employee": current_user["username"],
+                    "timestamp": now.isoformat(),
+                    "details": f"Updated {key.replace('_', ' ')}"
+                })
             elif key == "cost_items":
                 update_data[key] = value
+                activity_entries.append({
+                    "action": "updated",
+                    "employee": current_user["username"],
+                    "timestamp": now.isoformat(),
+                    "details": "Updated cost items"
+                })
             elif key == "status" and value != job.get("status"):
+                old_status = job.get("status")
                 update_data[key] = value
                 # Add to status history
                 status_entry = {
                     "status": value,
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": now.isoformat(),
                     "changed_by": current_user["username"],
                     "notes": job_update.notes or f"Status changed to {value}"
                 }
@@ -500,10 +515,47 @@ async def update_job(job_id: str, job_update: JobUpdate, current_user: dict = De
                     {"_id": ObjectId(job_id)},
                     {"$push": {"status_history": status_entry}}
                 )
+                # Add to activity log
+                activity_entries.append({
+                    "action": "status_changed",
+                    "employee": current_user["username"],
+                    "timestamp": now.isoformat(),
+                    "details": f"Status changed from {old_status} to {value}",
+                    "old_value": old_status,
+                    "new_value": value
+                })
+            elif key == "estimated_cost" and value != job.get("estimated_cost"):
+                update_data[key] = value
+                activity_entries.append({
+                    "action": "updated",
+                    "employee": current_user["username"],
+                    "timestamp": now.isoformat(),
+                    "details": f"Updated estimated cost to ${value}",
+                    "old_value": str(job.get("estimated_cost", "")),
+                    "new_value": str(value)
+                })
+            elif key == "actual_cost" and value != job.get("actual_cost"):
+                update_data[key] = value
+                activity_entries.append({
+                    "action": "updated",
+                    "employee": current_user["username"],
+                    "timestamp": now.isoformat(),
+                    "details": f"Updated actual cost to ${value}",
+                    "old_value": str(job.get("actual_cost", "")),
+                    "new_value": str(value)
+                })
             else:
                 update_data[key] = value
     
-    update_data["updated_at"] = datetime.utcnow()
+    update_data["updated_at"] = now
+    update_data["updated_by"] = current_user["username"]
+    
+    # Add activity log entries
+    if activity_entries:
+        await db.jobs.update_one(
+            {"_id": ObjectId(job_id)},
+            {"$push": {"activity_log": {"$each": activity_entries}}}
+        )
     
     await db.jobs.update_one(
         {"_id": ObjectId(job_id)},
