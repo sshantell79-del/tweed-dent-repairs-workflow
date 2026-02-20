@@ -51,8 +51,8 @@ export default function LoginScreen() {
             <View style={styles.iconContainer}>
               <Ionicons name="car-sport" size={48} color="#3B82F6" />
             </View>
-            <Text style={styles.title}>Smash Repairs</Text>
-            <Text style={styles.subtitle}>Workshop Management</Text>
+            <Text style={styles.title}>Tweed Dent Repairs</Text>
+            <Text style={styles.subtitle}>Work Flow</Text>
           </View>
 
           <View style={styles.form}>
