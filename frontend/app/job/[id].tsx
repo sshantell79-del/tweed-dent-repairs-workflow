@@ -438,6 +438,11 @@ export default function JobDetailScreen() {
           <Text style={styles.footerText}>
             Created {format(new Date(job.created_at), 'dd MMM yyyy')} by {job.created_by}
           </Text>
+          {job.updated_by && job.updated_by !== job.created_by && (
+            <Text style={styles.footerText}>
+              Last updated by {job.updated_by} on {format(new Date(job.updated_at), 'dd MMM yyyy, HH:mm')}
+            </Text>
+          )}
         </View>
       </ScrollView>
 
