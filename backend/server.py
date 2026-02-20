@@ -554,6 +554,77 @@ async def get_dashboard_stats(current_user: dict = Depends(get_current_user)):
 async def get_statuses():
     return {"statuses": JOB_STATUSES}
 
+# ==================== RETURNING CUSTOMER LOOKUP ====================
+
+class CustomerLookupResponse(BaseModel):
+    found: bool
+    registration: Optional[str] = None
+    car_info: Optional[dict] = None
+    owner_info: Optional[dict] = None
+    insurance_info: Optional[dict] = None
+    previous_jobs_count: int = 0
+    message: str
+
+@api_router.get("/lookup-rego/{registration}", response_model=CustomerLookupResponse)
+async def lookup_registration(registration: str, current_user: dict = Depends(get_current_user)):
+    """Look up a registration plate to find returning customer details from previous jobs."""
+    try:
+        # Clean up registration - uppercase, no spaces
+        clean_rego = registration.upper().replace(" ", "").replace("-", "")
+        
+        # Search for previous jobs with this registration
+        jobs = await db.jobs.find({
+            "car_info.registration": {"$regex": f"^{clean_rego}$", "$options": "i"}
+        }).sort("created_at", -1).to_list(100)
+        
+        if not jobs:
+            return CustomerLookupResponse(
+                found=False,
+                registration=clean_rego,
+                previous_jobs_count=0,
+                message="No previous records found for this registration"
+            )
+        
+        # Get the most recent job with complete owner info
+        latest_job = jobs[0]
+        owner_info = latest_job.get("owner_info")
+        
+        # Find the best owner info (most complete)
+        for job in jobs:
+            job_owner = job.get("owner_info")
+            if job_owner and job_owner.get("name") and job_owner.get("phone"):
+                owner_info = job_owner
+                break
+        
+        # Get car info from latest
+        car_info = latest_job.get("car_info")
+        
+        # Get insurance info if available
+        insurance_info = None
+        for job in jobs:
+            if job.get("insurance_info") and job.get("insurance_info", {}).get("company"):
+                insurance_info = job.get("insurance_info")
+                break
+        
+        return CustomerLookupResponse(
+            found=True,
+            registration=clean_rego,
+            car_info=car_info,
+            owner_info=owner_info,
+            insurance_info=insurance_info,
+            previous_jobs_count=len(jobs),
+            message=f"Returning customer! {len(jobs)} previous job(s) found"
+        )
+        
+    except Exception as e:
+        logger.error(f"Registration lookup error: {str(e)}")
+        return CustomerLookupResponse(
+            found=False,
+            registration=registration,
+            previous_jobs_count=0,
+            message=f"Error looking up registration: {str(e)}"
+        )
+
 # ==================== PLATE SCANNING ====================
 
 class PlateScanRequest(BaseModel):
@@ -565,6 +636,11 @@ class PlateScanResponse(BaseModel):
     model: Optional[str] = None
     color: Optional[str] = None
     year: Optional[int] = None
+    # Returning customer data
+    returning_customer: bool = False
+    owner_info: Optional[dict] = None
+    insurance_info: Optional[dict] = None
+    previous_jobs_count: int = 0
     success: bool
     message: str
 
