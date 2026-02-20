@@ -51,6 +51,15 @@ export interface StatusHistoryEntry {
   notes?: string;
 }
 
+export interface ActivityLogEntry {
+  action: string;
+  employee: string;
+  timestamp: string;
+  details?: string;
+  old_value?: string;
+  new_value?: string;
+}
+
 export interface Job {
   id: string;
   car_info: CarInfo;
@@ -64,9 +73,11 @@ export interface Job {
   cost_items: CostItem[];
   notes?: string;
   status_history: StatusHistoryEntry[];
+  activity_log?: ActivityLogEntry[];
   created_at: string;
   updated_at: string;
   created_by: string;
+  updated_by?: string;
 }
 
 export interface DashboardStats {
