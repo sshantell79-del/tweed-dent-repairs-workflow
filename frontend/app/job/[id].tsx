@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import { jobsAPI } from '../../src/services/api';
+import { jobsAPI, invoicesAPI } from '../../src/services/api';
 import { Job, JOB_STATUSES, STATUS_COLORS } from '../../src/types';
 import StatusBadge from '../../src/components/StatusBadge';
 import { format } from 'date-fns';
@@ -28,6 +28,7 @@ export default function JobDetailScreen() {
   const [photoModalVisible, setPhotoModalVisible] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [creatingInvoice, setCreatingInvoice] = useState(false);
 
   useEffect(() => {
     loadJob();
