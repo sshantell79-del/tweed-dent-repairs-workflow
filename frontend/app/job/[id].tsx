@@ -182,8 +182,12 @@ export default function JobDetailScreen() {
           <Ionicons name="arrow-back" size={24} color="#1F2937" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Job Details</Text>
-        <TouchableOpacity style={styles.headerButton} onPress={handleDeleteJob}>
-          <Ionicons name="trash-outline" size={24} color="#EF4444" />
+        <TouchableOpacity 
+          style={styles.deleteButton} 
+          onPress={handleDeleteJob}
+          activeOpacity={0.6}
+        >
+          <Ionicons name="trash-outline" size={22} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
