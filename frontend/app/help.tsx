@@ -14,6 +14,14 @@ import { Ionicons } from '@expo/vector-icons';
 export default function HelpScreen() {
   const router = useRouter();
 
+  const goBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(tabs)/profile');
+    }
+  };
+
   const faqs = [
     {
       question: 'How do I create a new job?',
