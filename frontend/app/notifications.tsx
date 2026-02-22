@@ -92,12 +92,6 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 8,
   },
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
