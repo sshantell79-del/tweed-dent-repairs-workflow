@@ -8,19 +8,16 @@
     "scheme": "tweeddentrepairs",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "owner": shan79
-    
-
-    "ios": {,
+    "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.shan79.tweeddentrepairs",
+      "bundleIdentifier": "com.tweeddentrepairs.workflow",
       "infoPlist": {
         "NSCameraUsageDescription": "Take photos of vehicle damage for job records",
         "NSPhotoLibraryUsageDescription": "Select damage photos from your gallery"
       }
     },
     "android": {
-      "package": "com.shan79.tweeddentrepairs",
+      "package": "com.tweeddentrepairs.workflow",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#3B82F6"
