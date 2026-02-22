@@ -58,7 +58,6 @@ export default function HelpScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Contact Support */}
         <Text style={styles.sectionTitle}>Contact Us</Text>
         <View style={styles.contactCard}>
           <TouchableOpacity style={styles.contactOption} onPress={() => Linking.openURL('tel:+61400000000')}>
@@ -82,7 +81,6 @@ export default function HelpScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* FAQs */}
         <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
         <View style={styles.faqContainer}>
           {faqs.map((faq, index) => (
@@ -106,7 +104,6 @@ export default function HelpScreen() {
           ))}
         </View>
 
-        {/* App Info */}
         <Text style={styles.sectionTitle}>About</Text>
         <View style={styles.aboutCard}>
           <Text style={styles.appName}>Tweed Dent Repairs</Text>
@@ -137,18 +134,6 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
-  },
-    backgroundColor: '#F9FAFB',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   headerTitle: {
     fontSize: 18,
