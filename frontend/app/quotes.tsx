@@ -69,6 +69,8 @@ export default function QuotesScreen() {
   const [damageItems, setDamageItems] = useState<DamageLineItem[]>([]);
   const [photos, setPhotos] = useState<string[]>([]);
   const [addPanelModalVisible, setAddPanelModalVisible] = useState(false);
+  const [selectedPanelForAdd, setSelectedPanelForAdd] = useState<number | null>(null);
+  const [selectedCategoryForAdd, setSelectedCategoryForAdd] = useState<number>(1);
 
   // Load panel pricing on mount
   useEffect(() => {
