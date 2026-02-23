@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
   },
   recentSection: {
     paddingHorizontal: 20,
-    marginBottom: 120,
+    marginBottom: 20,
   },
   sectionHeader: {
     flexDirection: 'row',
