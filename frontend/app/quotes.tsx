@@ -746,45 +746,131 @@ export default function QuotesScreen() {
         </SafeAreaView>
       </Modal>
 
-      {/* Add Panel Modal */}
+      {/* Add Panel Modal - Two Step Flow */}
       <Modal
         visible={addPanelModalVisible}
         animationType="slide"
         transparent={true}
-        onRequestClose={() => setAddPanelModalVisible(false)}
+        onRequestClose={closeAddPanelModal}
       >
         <View style={styles.panelModalOverlay}>
           <View style={styles.panelModalContent}>
-            <View style={styles.panelModalHeader}>
-              <Text style={styles.panelModalTitle}>Select Panel</Text>
-              <TouchableOpacity onPress={() => setAddPanelModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.panelList}>
-              {panelPricing && Object.entries(panelPricing.panels).map(([num, name]) => {
-                const panelNum = parseInt(num);
-                const isAdded = damageItems.some(d => d.panel_number === panelNum);
-                return (
-                  <TouchableOpacity
-                    key={num}
-                    style={[styles.panelOption, isAdded && styles.panelOptionDisabled]}
-                    onPress={() => !isAdded && addPanelManually(panelNum)}
-                    disabled={isAdded}
-                  >
-                    <View style={styles.panelOptionBadge}>
-                      <Text style={styles.panelOptionNumber}>{num}</Text>
-                    </View>
-                    <Text style={[styles.panelOptionName, isAdded && { color: '#9CA3AF' }]}>
-                      {name}
-                    </Text>
-                    {isAdded && (
-                      <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-                    )}
+            {panelSelectionStep === 'panel' ? (
+              <>
+                <View style={styles.panelModalHeader}>
+                  <Text style={styles.panelModalTitle}>Step 1: Select Panel</Text>
+                  <TouchableOpacity onPress={closeAddPanelModal}>
+                    <Ionicons name="close" size={24} color="#6B7280" />
                   </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+                </View>
+                <ScrollView style={styles.panelList}>
+                  {panelPricing && Object.entries(panelPricing.panels).map(([num, name]) => {
+                    const panelNum = parseInt(num);
+                    const isAdded = damageItems.some(d => d.panel_number === panelNum);
+                    return (
+                      <TouchableOpacity
+                        key={num}
+                        style={[styles.panelOption, isAdded && styles.panelOptionDisabled]}
+                        onPress={() => !isAdded && selectPanelForAdd(panelNum)}
+                        disabled={isAdded}
+                      >
+                        <View style={styles.panelOptionBadge}>
+                          <Text style={styles.panelOptionNumber}>{num}</Text>
+                        </View>
+                        <Text style={[styles.panelOptionName, isAdded && { color: '#9CA3AF' }]}>
+                          {name}
+                        </Text>
+                        {isAdded && (
+                          <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </>
+            ) : (
+              <>
+                <View style={styles.panelModalHeader}>
+                  <TouchableOpacity onPress={() => setPanelSelectionStep('panel')} style={styles.backButtonSmall}>
+                    <Ionicons name="arrow-back" size={20} color="#6B7280" />
+                  </TouchableOpacity>
+                  <Text style={styles.panelModalTitle}>Step 2: Select Category</Text>
+                  <TouchableOpacity onPress={closeAddPanelModal}>
+                    <Ionicons name="close" size={24} color="#6B7280" />
+                  </TouchableOpacity>
+                </View>
+                
+                {/* Selected Panel Display */}
+                {selectedPanelForAdd !== null && panelPricing && (
+                  <View style={styles.selectedPanelDisplay}>
+                    <View style={styles.panelBadgeLarge}>
+                      <Text style={styles.panelNumberLarge}>{selectedPanelForAdd}</Text>
+                    </View>
+                    <Text style={styles.selectedPanelName}>
+                      {panelPricing.panels[selectedPanelForAdd]}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Category Selection Buttons */}
+                <View style={styles.categorySelectionContainer}>
+                  <Text style={styles.categorySelectionTitle}>Choose Damage Category:</Text>
+                  <View style={styles.categoryGrid}>
+                    {CATEGORIES.map((cat) => {
+                      const catPrice = selectedPanelForAdd !== null 
+                        ? panelPricing?.pricing[selectedPanelForAdd]?.[cat] 
+                        : null;
+                      const isManual = catPrice === null || catPrice === undefined;
+                      const isSelected = selectedCategoryForAdd === cat;
+                      
+                      return (
+                        <TouchableOpacity
+                          key={cat}
+                          style={[
+                            styles.categorySelectButton,
+                            isSelected && styles.categorySelectButtonActive,
+                          ]}
+                          onPress={() => setSelectedCategoryForAdd(cat)}
+                        >
+                          <Text style={[
+                            styles.categorySelectNumber,
+                            isSelected && styles.categorySelectNumberActive,
+                          ]}>
+                            Cat {cat}
+                          </Text>
+                          {isManual ? (
+                            <Text style={[
+                              styles.categorySelectPrice,
+                              isSelected && styles.categorySelectPriceActive,
+                            ]}>
+                              Manual
+                            </Text>
+                          ) : (
+                            <Text style={[
+                              styles.categorySelectPrice,
+                              isSelected && styles.categorySelectPriceActive,
+                            ]}>
+                              ${catPrice}
+                            </Text>
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                {/* Add Panel Button */}
+                <TouchableOpacity
+                  style={styles.addPanelConfirmButton}
+                  onPress={() => addPanelWithCategory(selectedCategoryForAdd)}
+                >
+                  <Ionicons name="add-circle" size={20} color="#FFFFFF" />
+                  <Text style={styles.addPanelConfirmText}>
+                    Add Panel with Category {selectedCategoryForAdd}
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         </View>
       </Modal>
