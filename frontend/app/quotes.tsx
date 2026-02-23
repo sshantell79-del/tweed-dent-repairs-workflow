@@ -71,6 +71,7 @@ export default function QuotesScreen() {
   const [addPanelModalVisible, setAddPanelModalVisible] = useState(false);
   const [selectedPanelForAdd, setSelectedPanelForAdd] = useState<number | null>(null);
   const [selectedCategoryForAdd, setSelectedCategoryForAdd] = useState<number>(1);
+  const [panelSelectionStep, setPanelSelectionStep] = useState<'panel' | 'category'>('panel');
 
   // Load panel pricing on mount
   useEffect(() => {
