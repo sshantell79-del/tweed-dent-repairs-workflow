@@ -185,27 +185,39 @@ export default function QuotesScreen() {
     }
   };
 
-  const addPanelManually = (panelNumber: number) => {
-    if (!panelPricing) return;
-    
+  const selectPanelForAdd = (panelNumber: number) => {
     const existingPanels = new Set(damageItems.map(d => d.panel_number));
     if (existingPanels.has(panelNumber)) {
       Alert.alert('Info', 'This panel is already added');
       return;
     }
+    setSelectedPanelForAdd(panelNumber);
+    setSelectedCategoryForAdd(1); // Reset to default category
+    setPanelSelectionStep('category');
+  };
 
-    const price = panelPricing.pricing[panelNumber]?.[1] ?? 0;
+  const addPanelWithCategory = (category: number) => {
+    if (!panelPricing || selectedPanelForAdd === null) return;
+    
+    const price = panelPricing.pricing[selectedPanelForAdd]?.[category] ?? 0;
     const newItem: DamageLineItem = {
-      panel_number: panelNumber,
-      panel_name: panelPricing.panels[panelNumber],
-      category: 1,
+      panel_number: selectedPanelForAdd,
+      panel_name: panelPricing.panels[selectedPanelForAdd],
+      category: category,
       price: price,
-      is_manual_price: price === null,
+      is_manual_price: price === null || price === undefined,
       description: '',
     };
     
     setDamageItems([...damageItems, newItem]);
+    closeAddPanelModal();
+  };
+
+  const closeAddPanelModal = () => {
     setAddPanelModalVisible(false);
+    setSelectedPanelForAdd(null);
+    setSelectedCategoryForAdd(1);
+    setPanelSelectionStep('panel');
   };
 
   const updateItemCategory = (index: number, category: number) => {
