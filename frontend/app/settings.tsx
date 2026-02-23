@@ -57,11 +57,12 @@ export default function SettingsScreen() {
           style={styles.backButton}
           activeOpacity={0.7}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          data-testid="settings-back-btn"
         >
-          <Ionicons name="arrow-back" size={24} color="#1F2937" />
+          <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Settings</Text>
-        <View style={{ width: 24 }} />
+        <View style={{ width: 60 }} />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
