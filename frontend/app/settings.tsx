@@ -186,6 +186,11 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 8,
   },
+  backButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#3B82F6',
+  },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
