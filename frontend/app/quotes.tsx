@@ -760,8 +760,8 @@ export default function QuotesScreen() {
               <>
                 <View style={styles.panelModalHeader}>
                   <Text style={styles.panelModalTitle}>Step 1: Select Panel</Text>
-                  <TouchableOpacity onPress={closeAddPanelModal}>
-                    <Ionicons name="close" size={24} color="#6B7280" />
+                  <TouchableOpacity onPress={closeAddPanelModal} style={styles.closeButton}>
+                    <Text style={styles.closeButtonText}>✕</Text>
                   </TouchableOpacity>
                 </View>
                 <ScrollView style={styles.panelList}>
@@ -782,7 +782,7 @@ export default function QuotesScreen() {
                           {name}
                         </Text>
                         {isAdded && (
-                          <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+                          <Text style={styles.checkIcon}>✓</Text>
                         )}
                       </TouchableOpacity>
                     );
@@ -793,11 +793,11 @@ export default function QuotesScreen() {
               <>
                 <View style={styles.panelModalHeader}>
                   <TouchableOpacity onPress={() => setPanelSelectionStep('panel')} style={styles.backButtonSmall}>
-                    <Ionicons name="arrow-back" size={20} color="#6B7280" />
+                    <Text style={styles.backArrowText}>←</Text>
                   </TouchableOpacity>
                   <Text style={styles.panelModalTitle}>Step 2: Select Category</Text>
-                  <TouchableOpacity onPress={closeAddPanelModal}>
-                    <Ionicons name="close" size={24} color="#6B7280" />
+                  <TouchableOpacity onPress={closeAddPanelModal} style={styles.closeButton}>
+                    <Text style={styles.closeButtonText}>✕</Text>
                   </TouchableOpacity>
                 </View>
                 
@@ -865,7 +865,7 @@ export default function QuotesScreen() {
                   style={styles.addPanelConfirmButton}
                   onPress={() => addPanelWithCategory(selectedCategoryForAdd)}
                 >
-                  <Ionicons name="add-circle" size={20} color="#FFFFFF" />
+                  <Text style={styles.addPanelConfirmIcon}>+</Text>
                   <Text style={styles.addPanelConfirmText}>
                     Add Panel with Category {selectedCategoryForAdd}
                   </Text>
