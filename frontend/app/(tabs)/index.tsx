@@ -77,6 +77,17 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Quick Actions */}
+        <View style={styles.quickActions}>
+          <TouchableOpacity 
+            style={styles.quickCreateButton}
+            onPress={() => router.push('/(tabs)/add')}
+          >
+            <Text style={styles.quickCreateIcon}>+</Text>
+            <Text style={styles.quickCreateText}>Quick Create Job</Text>
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.statsGrid}>
           <View style={[styles.statCard, styles.primaryCard]}>
             <View style={styles.statIcon}>
