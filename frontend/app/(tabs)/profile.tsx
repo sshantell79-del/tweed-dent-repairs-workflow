@@ -300,6 +300,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     gap: 8,
   },
+  logoutIcon: {
+    fontSize: 18,
+    color: '#EF4444',
+  },
   logoutText: {
     fontSize: 16,
     fontWeight: '600',
