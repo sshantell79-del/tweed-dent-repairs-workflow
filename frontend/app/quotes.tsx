@@ -774,8 +774,12 @@ export default function QuotesScreen() {
                       <TouchableOpacity
                         key={num}
                         style={[styles.panelOption, isAdded && styles.panelOptionDisabled]}
-                        onPress={() => !isAdded && selectPanelForAdd(panelNum)}
+                        onPress={() => {
+                          console.log('Panel pressed:', panelNum);
+                          if (!isAdded) selectPanelForAdd(panelNum);
+                        }}
                         disabled={isAdded}
+                        activeOpacity={0.6}
                       >
                         <View style={styles.panelOptionBadge}>
                           <Text style={styles.panelOptionNumber}>{num}</Text>
