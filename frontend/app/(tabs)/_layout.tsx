@@ -1,7 +1,13 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { Platform } from 'react-native';
+import { Platform, Text, View } from 'react-native';
+
+// Custom tab icon component using emoji/text for better compatibility
+const TabIcon = ({ emoji, label, focused }: { emoji: string; label: string; focused: boolean }) => (
+  <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+    <Text style={{ fontSize: 20 }}>{emoji}</Text>
+  </View>
+);
 
 export default function TabLayout() {
   return (
@@ -14,22 +20,30 @@ export default function TabLayout() {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: '#E5E7EB',
-          height: Platform.OS === 'ios' ? 88 : 64,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 8,
-          paddingTop: 8,
+          height: Platform.OS === 'ios' ? 88 : 70,
+          paddingBottom: Platform.OS === 'ios' ? 28 : 10,
+          paddingTop: 10,
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '500',
+          fontWeight: '600',
+          marginTop: 4,
+        },
+        tabBarIconStyle: {
+          marginBottom: -4,
         },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="speedometer-outline" size={size} color={color} />
+          title: 'Home',
+          tabBarIcon: ({ focused }) => (
+            <TabIcon emoji="🏠" label="Home" focused={focused} />
           ),
         }}
       />
@@ -37,17 +51,17 @@ export default function TabLayout() {
         name="jobs"
         options={{
           title: 'Jobs',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="car-outline" size={size} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <TabIcon emoji="🚗" label="Jobs" focused={focused} />
           ),
         }}
       />
       <Tabs.Screen
         name="add"
         options={{
-          title: 'Add Job',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="add-circle-outline" size={size} color={color} />
+          title: 'Add',
+          tabBarIcon: ({ focused }) => (
+            <TabIcon emoji="➕" label="Add" focused={focused} />
           ),
         }}
       />
@@ -55,8 +69,8 @@ export default function TabLayout() {
         name="contacts"
         options={{
           title: 'Contacts',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people-outline" size={size} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <TabIcon emoji="👥" label="Contacts" focused={focused} />
           ),
         }}
       />
@@ -64,8 +78,8 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+          tabBarIcon: ({ focused }) => (
+            <TabIcon emoji="👤" label="Profile" focused={focused} />
           ),
         }}
       />
