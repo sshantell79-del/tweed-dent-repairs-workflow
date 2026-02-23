@@ -2,13 +2,6 @@ import React from 'react';
 import { Tabs } from 'expo-router';
 import { Platform, Text, View } from 'react-native';
 
-// Custom tab icon component using emoji/text for better compatibility
-const TabIcon = ({ emoji, label, focused }: { emoji: string; label: string; focused: boolean }) => (
-  <View style={{ alignItems: 'center', justifyContent: 'center' }}>
-    <Text style={{ fontSize: 20 }}>{emoji}</Text>
-  </View>
-);
-
 export default function TabLayout() {
   return (
     <Tabs
@@ -20,21 +13,13 @@ export default function TabLayout() {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: '#E5E7EB',
-          height: Platform.OS === 'ios' ? 88 : 70,
-          paddingBottom: Platform.OS === 'ios' ? 28 : 10,
-          paddingTop: 10,
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
+          height: Platform.OS === 'ios' ? 85 : 65,
+          paddingBottom: Platform.OS === 'ios' ? 25 : 8,
+          paddingTop: 8,
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
-          marginTop: 4,
-        },
-        tabBarIconStyle: {
-          marginBottom: -4,
         },
       }}
     >
@@ -42,45 +27,35 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="🏠" label="Home" focused={focused} />
-          ),
+          tabBarIcon: () => <Text style={{ fontSize: 22 }}>🏠</Text>,
         }}
       />
       <Tabs.Screen
         name="jobs"
         options={{
           title: 'Jobs',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="🚗" label="Jobs" focused={focused} />
-          ),
+          tabBarIcon: () => <Text style={{ fontSize: 22 }}>🚗</Text>,
         }}
       />
       <Tabs.Screen
         name="add"
         options={{
           title: 'Add',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="➕" label="Add" focused={focused} />
-          ),
+          tabBarIcon: () => <Text style={{ fontSize: 22 }}>➕</Text>,
         }}
       />
       <Tabs.Screen
         name="contacts"
         options={{
           title: 'Contacts',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="👥" label="Contacts" focused={focused} />
-          ),
+          tabBarIcon: () => <Text style={{ fontSize: 22 }}>👥</Text>,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ focused }) => (
-            <TabIcon emoji="👤" label="Profile" focused={focused} />
-          ),
+          tabBarIcon: () => <Text style={{ fontSize: 22 }}>👤</Text>,
         }}
       />
     </Tabs>
