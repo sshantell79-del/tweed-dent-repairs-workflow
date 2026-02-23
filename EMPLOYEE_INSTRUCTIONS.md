@@ -17,7 +17,7 @@
 2. Tap **"Scan QR Code"** (or enter URL manually)
 3. Scan this QR code or enter the URL below:
 
-**App URL:** https://repair-flow-app-1.preview.emergentagent.com
+**App URL:** https://tweed-job-manager.preview.emergentagent.com
 
 ---
 

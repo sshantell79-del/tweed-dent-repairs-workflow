@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 import uuid
 
 # Configuration
-BASE_URL = "https://repair-flow-app-1.preview.emergentagent.com/api"
+BASE_URL = "https://tweed-job-manager.preview.emergentagent.com/api"
 TEST_USER = {
     "username": "testshop",
     "email": "testshop@smashrepairs.com",

@@ -257,7 +257,7 @@ agent_communication:
   - agent: "main"
     message: "Implemented full smash repairs management app with JWT auth, jobs CRUD, status management, photos, and dashboard stats. Please test all backend APIs."
   - agent: "testing"
-    message: "✅ BACKEND TESTING COMPLETED: All 5 backend tasks passed comprehensive testing. Tested 20+ endpoints including authentication, CRUD operations, photo management, dashboard stats, and error handling. All APIs working correctly at https://repair-flow-app-1.preview.emergentagent.com/api. Ready for production use."
+    message: "✅ BACKEND TESTING COMPLETED: All 5 backend tasks passed comprehensive testing. Tested 20+ endpoints including authentication, CRUD operations, photo management, dashboard stats, and error handling. All APIs working correctly at https://tweed-job-manager.preview.emergentagent.com/api. Ready for production use."
   - agent: "main"
     message: "Enhanced the invoicing system with full details - line items, GST (10%), due dates, and payment status. Added Customer endpoints and Contacts UI. Need to test: 1) Invoice CRUD APIs 2) Customer CRUD APIs 3) Invoice status updates"
   - agent: "testing"

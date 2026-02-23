@@ -6,7 +6,7 @@ Test Additional Critical Backend Features
 import requests
 import json
 
-BACKEND_URL = "https://repair-flow-app-1.preview.emergentagent.com/api"
+BACKEND_URL = "https://tweed-job-manager.preview.emergentagent.com/api"
 
 def test_complete_flow():
     """Test complete user and job flow"""
