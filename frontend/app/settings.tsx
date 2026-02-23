@@ -58,9 +58,7 @@ export default function SettingsScreen() {
           activeOpacity={0.7}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
-          <View style={styles.backButtonInner}>
-            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-          </View>
+          <Ionicons name="arrow-back" size={24} color="#1F2937" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Settings</Text>
         <View style={{ width: 24 }} />
