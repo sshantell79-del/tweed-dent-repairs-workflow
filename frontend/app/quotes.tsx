@@ -186,17 +186,14 @@ export default function QuotesScreen() {
   };
 
   const selectPanelForAdd = (panelNumber: number) => {
-    console.log('selectPanelForAdd called with panel:', panelNumber);
     const existingPanels = new Set(damageItems.map(d => d.panel_number));
     if (existingPanels.has(panelNumber)) {
       Alert.alert('Info', 'This panel is already added');
       return;
     }
-    console.log('Setting panelSelectionStep to category');
     setSelectedPanelForAdd(panelNumber);
     setSelectedCategoryForAdd(1); // Reset to default category
     setPanelSelectionStep('category');
-    console.log('State updates called');
   };
 
   const addPanelWithCategory = (category: number) => {
