@@ -840,15 +840,14 @@ export default function QuotesScreen() {
                             );
                           })}
                         </View>
-                        <TouchableOpacity
-                          style={styles.addPanelInlineBtn}
+                        <Pressable
+                          style={({ pressed }) => [styles.addPanelInlineBtn, pressed && { opacity: 0.7 }]}
                           onPress={() => addPanelWithCategory(selectedCategoryForAdd)}
-                          activeOpacity={0.7}
                         >
                           <Text style={styles.addPanelInlineBtnText}>
                             + Add {name} (Cat {selectedCategoryForAdd})
                           </Text>
-                        </TouchableOpacity>
+                        </Pressable>
                       </View>
                     )}
                   </View>
