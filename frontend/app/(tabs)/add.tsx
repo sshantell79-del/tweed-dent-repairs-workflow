@@ -845,9 +845,26 @@ const styles = StyleSheet.create({
     top: -8,
     right: -8,
   },
+  removePhotoIcon: {
+    fontSize: 18,
+    color: '#EF4444',
+    fontWeight: '700',
+    backgroundColor: '#FEE2E2',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  photoIcon: {
+    fontSize: 24,
+  },
   noPhotos: {
     alignItems: 'center',
     paddingVertical: 40,
+  },
+  noPhotosIcon: {
+    fontSize: 48,
   },
   noPhotosText: {
     fontSize: 14,
@@ -857,6 +874,9 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginBottom: 100,
     gap: 12,
+  },
+  quickIcon: {
+    fontSize: 18,
   },
   quickCreateButton: {
     flexDirection: 'row',
@@ -873,6 +893,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#10B981',
+  },
+  submitIcon: {
+    fontSize: 18,
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   submitButton: {
     flexDirection: 'row',
