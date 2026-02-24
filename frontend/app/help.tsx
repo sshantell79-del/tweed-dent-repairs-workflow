@@ -201,6 +201,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  faqChevron: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
   faqQuestion: {
     flex: 1,
     fontSize: 15,
