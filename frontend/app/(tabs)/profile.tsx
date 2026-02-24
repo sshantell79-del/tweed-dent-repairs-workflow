@@ -107,18 +107,18 @@ export default function ProfileScreen() {
       <View style={styles.menuSection}>
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/quotes')}>
           <View style={[styles.menuIcon, { backgroundColor: '#FEF3C7' }]}>
-            <Ionicons name="calculator-outline" size={20} color="#F59E0B" />
+            <Text style={{fontSize: 18}}>🧮</Text>
           </View>
           <Text style={styles.menuText}>Quotes</Text>
-          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+          <Text style={{fontSize: 18, color: "#9CA3AF"}}>›</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/invoices')}>
           <View style={[styles.menuIcon, { backgroundColor: '#D1FAE5' }]}>
-            <Ionicons name="document-text-outline" size={20} color="#10B981" />
+            <Text style={{fontSize: 18}}>📄</Text>
           </View>
           <Text style={styles.menuText}>Invoices</Text>
-          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+          <Text style={{fontSize: 18, color: "#9CA3AF"}}>›</Text>
         </TouchableOpacity>
 
         {/* Xero Integration */}
@@ -147,34 +147,34 @@ export default function ProfileScreen() {
             )}
           </View>
           {xeroStatus?.connected ? (
-            <Ionicons name="close-circle-outline" size={20} color="#EF4444" />
+            <Text style={{fontSize: 18}}>❌</Text>
           ) : (
-            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+            <Text style={{fontSize: 18, color: "#9CA3AF"}}>›</Text>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/settings')}>
           <View style={[styles.menuIcon, { backgroundColor: '#EFF6FF' }]}>
-            <Ionicons name="settings-outline" size={20} color="#3B82F6" />
+            <Text style={{fontSize: 18}}>⚙️</Text>
           </View>
           <Text style={styles.menuText}>Settings</Text>
-          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+          <Text style={{fontSize: 18, color: "#9CA3AF"}}>›</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/notifications')}>
           <View style={[styles.menuIcon, { backgroundColor: '#FEF3C7' }]}>
-            <Ionicons name="notifications-outline" size={20} color="#F59E0B" />
+            <Text style={{fontSize: 18}}>🔔</Text>
           </View>
           <Text style={styles.menuText}>Notifications</Text>
-          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+          <Text style={{fontSize: 18, color: "#9CA3AF"}}>›</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem} onPress={() => router.push('/help')}>
           <View style={[styles.menuIcon, { backgroundColor: '#EDE9FE' }]}>
-            <Ionicons name="help-circle-outline" size={20} color="#8B5CF6" />
+            <Text style={{fontSize: 18}}>❓</Text>
           </View>
           <Text style={styles.menuText}>Help & Support</Text>
-          <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+          <Text style={{fontSize: 18, color: "#9CA3AF"}}>›</Text>
         </TouchableOpacity>
       </View>
 

@@ -183,7 +183,7 @@ export default function ContactsScreen() {
         <View style={styles.customerInfo}>
           <Text style={styles.customerName}>{item.name}</Text>
           <View style={styles.phoneRow}>
-            <Ionicons name="call-outline" size={14} color="#6B7280" />
+            <Text style={{fontSize: 12}}>📞</Text>
             <Text style={styles.customerPhone}>{item.phone}</Text>
           </View>
         </View>
@@ -191,20 +191,20 @@ export default function ContactsScreen() {
           style={styles.deleteButton}
           onPress={() => handleDelete(item)}
         >
-          <Ionicons name="trash-outline" size={18} color="#EF4444" />
+          <Text style={{fontSize: 16}}>🗑️</Text>
         </TouchableOpacity>
       </View>
 
       {item.email && (
         <View style={styles.detailRow}>
-          <Ionicons name="mail-outline" size={14} color="#9CA3AF" />
+          <Text style={{fontSize: 12}}>✉️</Text>
           <Text style={styles.detailText}>{item.email}</Text>
         </View>
       )}
 
       {item.vehicles.length > 0 && (
         <View style={styles.vehiclesRow}>
-          <Ionicons name="car-outline" size={14} color="#9CA3AF" />
+          <Text style={{fontSize: 12}}>🚗</Text>
           <Text style={styles.vehiclesText}>
             {item.vehicles.map((v) => v.registration).join(', ')}
           </Text>

@@ -133,7 +133,7 @@ export default function JobsScreen() {
       </View>
 
       <View style={styles.searchContainer}>
-        <Ionicons name="search-outline" size={20} color="#9CA3AF" style={styles.searchIcon} />
+        <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
           style={styles.searchInput}
           placeholder="Search by rego, make, owner..."
@@ -143,7 +143,7 @@ export default function JobsScreen() {
         />
         {search ? (
           <TouchableOpacity onPress={() => setSearch('')}>
-            <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+            <Text style={{fontSize: 16, color: "#9CA3AF"}}>✕</Text>
           </TouchableOpacity>
         ) : null}
       </View>
@@ -161,7 +161,7 @@ export default function JobsScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="car-outline" size={64} color="#D1D5DB" />
+            <Text style={{fontSize: 48}}>🚗</Text>
             <Text style={styles.emptyTitle}>No jobs found</Text>
             <Text style={styles.emptyText}>
               {search || selectedStatus !== 'All'
