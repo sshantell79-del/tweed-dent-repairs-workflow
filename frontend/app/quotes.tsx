@@ -749,7 +749,7 @@ export default function QuotesScreen() {
         </SafeAreaView>
       </Modal>
 
-      {/* Add Panel Modal - Two Step Flow */}
+      {/* Add Panel Modal - Simple single screen with expandable panels */}
       <Modal
         visible={addPanelModalVisible}
         animationType="slide"
@@ -758,66 +758,106 @@ export default function QuotesScreen() {
       >
         <View style={styles.panelModalOverlay}>
           <View style={styles.panelModalContent}>
-            {panelSelectionStep === 'panel' ? (
-              <>
-                <View style={styles.panelModalHeader}>
-                  <Text style={styles.panelModalTitle}>Step 1: Select Panel</Text>
-                  <TouchableOpacity onPress={closeAddPanelModal} style={styles.closeButton}>
-                    <Text style={styles.closeButtonText}>✕</Text>
-                  </TouchableOpacity>
-                </View>
-                <ScrollView style={styles.panelList}>
-                  {panelPricing && Object.entries(panelPricing.panels).map(([num, name]) => {
-                    const panelNum = parseInt(num);
-                    const isAdded = damageItems.some(d => d.panel_number === panelNum);
-                    return (
-                      <TouchableOpacity
-                        key={num}
-                        style={[styles.panelOption, isAdded && styles.panelOptionDisabled]}
-                        onPress={() => {
-                          console.log('Panel pressed:', panelNum);
-                          if (!isAdded) selectPanelForAdd(panelNum);
-                        }}
-                        disabled={isAdded}
-                        activeOpacity={0.6}
-                      >
-                        <View style={styles.panelOptionBadge}>
-                          <Text style={styles.panelOptionNumber}>{num}</Text>
-                        </View>
-                        <Text style={[styles.panelOptionName, isAdded && { color: '#9CA3AF' }]}>
-                          {name}
-                        </Text>
-                        {isAdded && (
-                          <Text style={styles.checkIcon}>✓</Text>
-                        )}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </ScrollView>
-              </>
-            ) : (
-              <>
-                <View style={styles.panelModalHeader}>
-                  <TouchableOpacity onPress={() => setPanelSelectionStep('panel')} style={styles.backButtonSmall}>
-                    <Text style={styles.backArrowText}>←</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.panelModalTitle}>Step 2: Select Category</Text>
-                  <TouchableOpacity onPress={closeAddPanelModal} style={styles.closeButton}>
-                    <Text style={styles.closeButtonText}>✕</Text>
-                  </TouchableOpacity>
-                </View>
+            <View style={styles.panelModalHeader}>
+              <Text style={styles.panelModalTitle}>Add Panel</Text>
+              <TouchableOpacity onPress={closeAddPanelModal} style={styles.closeButton}>
+                <Text style={styles.closeButtonText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.panelModalSubtitle}>Tap a panel, then select damage category</Text>
+            <ScrollView style={styles.panelList}>
+              {panelPricing && Object.entries(panelPricing.panels).map(([num, name]) => {
+                const panelNum = parseInt(num);
+                const isAdded = damageItems.some(d => d.panel_number === panelNum);
+                const isSelected = selectedPanelForAdd === panelNum;
                 
-                {/* Selected Panel Display */}
-                {selectedPanelForAdd !== null && panelPricing && (
-                  <View style={styles.selectedPanelDisplay}>
-                    <View style={styles.panelBadgeLarge}>
-                      <Text style={styles.panelNumberLarge}>{selectedPanelForAdd}</Text>
-                    </View>
-                    <Text style={styles.selectedPanelName}>
-                      {panelPricing.panels[selectedPanelForAdd]}
-                    </Text>
+                return (
+                  <View key={num}>
+                    <TouchableOpacity
+                      style={[
+                        styles.panelOption, 
+                        isAdded && styles.panelOptionDisabled,
+                        isSelected && styles.panelOptionSelected
+                      ]}
+                      onPress={() => {
+                        if (!isAdded) {
+                          if (isSelected) {
+                            setSelectedPanelForAdd(null);
+                          } else {
+                            setSelectedPanelForAdd(panelNum);
+                            setSelectedCategoryForAdd(1);
+                          }
+                        }
+                      }}
+                      disabled={isAdded}
+                      activeOpacity={0.6}
+                    >
+                      <View style={[styles.panelOptionBadge, isSelected && styles.panelOptionBadgeSelected]}>
+                        <Text style={[styles.panelOptionNumber, isSelected && { color: '#FFFFFF' }]}>{num}</Text>
+                      </View>
+                      <Text style={[styles.panelOptionName, isAdded && { color: '#9CA3AF' }]}>
+                        {name}
+                      </Text>
+                      {isAdded ? (
+                        <Text style={styles.checkIcon}>✓</Text>
+                      ) : (
+                        <Text style={styles.expandIcon}>{isSelected ? '▼' : '▶'}</Text>
+                      )}
+                    </TouchableOpacity>
+                    
+                    {/* Category buttons appear when panel is selected */}
+                    {isSelected && !isAdded && (
+                      <View style={styles.categoryInlineContainer}>
+                        <Text style={styles.categoryInlineLabel}>Select Category:</Text>
+                        <View style={styles.categoryInlineButtons}>
+                          {CATEGORIES.map((cat) => {
+                            const catPrice = panelPricing?.pricing[panelNum]?.[cat];
+                            const isManual = catPrice === null || catPrice === undefined;
+                            
+                            return (
+                              <TouchableOpacity
+                                key={cat}
+                                style={[
+                                  styles.categoryInlineBtn,
+                                  selectedCategoryForAdd === cat && styles.categoryInlineBtnActive
+                                ]}
+                                onPress={() => setSelectedCategoryForAdd(cat)}
+                                activeOpacity={0.7}
+                              >
+                                <Text style={[
+                                  styles.categoryInlineBtnText,
+                                  selectedCategoryForAdd === cat && styles.categoryInlineBtnTextActive
+                                ]}>
+                                  Cat {cat}
+                                </Text>
+                                <Text style={[
+                                  styles.categoryInlinePrice,
+                                  selectedCategoryForAdd === cat && styles.categoryInlineBtnTextActive
+                                ]}>
+                                  {isManual ? 'Manual' : `$${catPrice}`}
+                                </Text>
+                              </TouchableOpacity>
+                            );
+                          })}
+                        </View>
+                        <TouchableOpacity
+                          style={styles.addPanelInlineBtn}
+                          onPress={() => addPanelWithCategory(selectedCategoryForAdd)}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.addPanelInlineBtnText}>
+                            + Add {name} (Cat {selectedCategoryForAdd})
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
                   </View>
-                )}
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
                 {/* Category Selection Buttons */}
                 <View style={styles.categorySelectionContainer}>
