@@ -439,23 +439,22 @@ export default function QuotesScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} data-testid="quotes-back-btn">
-          <Ionicons name="arrow-back" size={24} color="#1F2937" />
+        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <Text style={styles.backBtnText}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Quotes</Text>
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => setCreateModalVisible(true)}
-          data-testid="quotes-add-btn"
         >
-          <Ionicons name="add" size={24} color="#FFFFFF" />
+          <Text style={styles.addBtnText}>+</Text>
         </TouchableOpacity>
       </View>
 
       {/* Search */}
       <View style={styles.searchContainer}>
         <View style={styles.searchBox}>
-          <Ionicons name="search" size={20} color="#9CA3AF" />
+          <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
             placeholder="Search quotes..."
