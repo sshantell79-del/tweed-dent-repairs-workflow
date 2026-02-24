@@ -131,11 +131,7 @@ export default function ProfileScreen() {
             {xeroLoading || connecting ? (
               <ActivityIndicator size="small" color="#0D9488" />
             ) : (
-              <Ionicons 
-                name={xeroStatus?.connected ? "checkmark-circle" : "cloud-upload-outline"} 
-                size={20} 
-                color={xeroStatus?.connected ? "#10B981" : "#0D9488"} 
-              />
+              <Text style={{fontSize: 18}}>{xeroStatus?.connected ? '✅' : '☁️'}</Text>
             )}
           </View>
           <View style={styles.menuTextContainer}>
