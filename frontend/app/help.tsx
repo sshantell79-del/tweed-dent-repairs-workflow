@@ -61,7 +61,7 @@ export default function HelpScreen() {
         <View style={styles.contactCard}>
           <TouchableOpacity style={styles.contactOption} onPress={() => Linking.openURL('tel:+61400000000')}>
             <View style={[styles.contactIcon, { backgroundColor: '#DCFCE7' }]}>
-              <Ionicons name="call" size={22} color="#10B981" />
+              <Text style={styles.contactIconText}>📞</Text>
             </View>
             <View>
               <Text style={styles.contactLabel}>Phone Support</Text>
@@ -71,7 +71,7 @@ export default function HelpScreen() {
 
           <TouchableOpacity style={styles.contactOption} onPress={() => Linking.openURL('mailto:support@tweeddentrepairs.com.au')}>
             <View style={[styles.contactIcon, { backgroundColor: '#DBEAFE' }]}>
-              <Ionicons name="mail" size={22} color="#3B82F6" />
+              <Text style={styles.contactIconText}>✉️</Text>
             </View>
             <View>
               <Text style={styles.contactLabel}>Email Support</Text>
@@ -90,11 +90,7 @@ export default function HelpScreen() {
             >
               <View style={styles.faqHeader}>
                 <Text style={styles.faqQuestion}>{faq.question}</Text>
-                <Ionicons
-                  name={expandedFaq === index ? 'chevron-up' : 'chevron-down'}
-                  size={20}
-                  color="#6B7280"
-                />
+                <Text style={styles.faqChevron}>{expandedFaq === index ? '▲' : '▼'}</Text>
               </View>
               {expandedFaq === index && (
                 <Text style={styles.faqAnswer}>{faq.answer}</Text>
