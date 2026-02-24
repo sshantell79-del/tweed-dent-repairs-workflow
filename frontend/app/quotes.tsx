@@ -602,18 +602,18 @@ export default function QuotesScreen() {
               
               <View style={styles.photoButtons}>
                 <TouchableOpacity style={styles.photoButton} onPress={takePhoto} disabled={analyzing}>
-                  <Ionicons name="camera" size={24} color="#3B82F6" />
+                  <Text style={styles.photoIcon}>📷</Text>
                   <Text style={styles.photoButtonText}>Camera</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.photoButton} onPress={pickImage} disabled={analyzing}>
-                  <Ionicons name="images" size={24} color="#3B82F6" />
+                  <Text style={styles.photoIcon}>🖼️</Text>
                   <Text style={styles.photoButtonText}>Gallery</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.photoButton, { backgroundColor: '#FEF3C7', borderColor: '#FCD34D' }]} 
                   onPress={() => setAddPanelModalVisible(true)}
                 >
-                  <Ionicons name="add-circle" size={24} color="#F59E0B" />
+                  <Text style={styles.photoIcon}>➕</Text>
                   <Text style={[styles.photoButtonText, { color: '#F59E0B' }]}>Add Panel</Text>
                 </TouchableOpacity>
               </View>
