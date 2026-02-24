@@ -105,7 +105,10 @@ export default function SettingsScreen() {
         {/* Business Settings */}
         <Text style={styles.sectionTitle}>Business Settings</Text>
         <View style={styles.section}>
-          <Pressable style={({ pressed }) => [styles.menuRow, pressed && { opacity: 0.6 }]}>
+          <Pressable 
+            style={({ pressed }) => [styles.menuRow, pressed && { opacity: 0.6 }]}
+            onPress={() => Alert.alert('Business Details', 'Business Name: Tweed Dent Repairs\nABN: Contact admin\nAddress: Tweed Heads, NSW', [{ text: 'OK' }])}
+          >
             <View style={styles.settingInfo}>
               <Text style={styles.settingIcon}>🏢</Text>
               <Text style={styles.settingLabel}>Business Details</Text>
@@ -113,7 +116,10 @@ export default function SettingsScreen() {
             <Text style={styles.chevron}>›</Text>
           </Pressable>
 
-          <Pressable style={({ pressed }) => [styles.menuRow, pressed && { opacity: 0.6 }]}>
+          <Pressable 
+            style={({ pressed }) => [styles.menuRow, pressed && { opacity: 0.6 }]}
+            onPress={() => Alert.alert('Panel Pricing', 'Panel pricing categories:\n\nCat 1: Light damage\nCat 2: Minor damage\nCat 3: Moderate damage\nCat 4: Heavy damage\nCat 5: Manual quote\n\nPrices are set per panel in the Quotes section.', [{ text: 'OK' }])}
+          >
             <View style={styles.settingInfo}>
               <Text style={styles.settingIcon}>🏷️</Text>
               <Text style={styles.settingLabel}>Panel Pricing</Text>
@@ -121,7 +127,10 @@ export default function SettingsScreen() {
             <Text style={styles.chevron}>›</Text>
           </Pressable>
 
-          <Pressable style={({ pressed }) => [styles.menuRow, pressed && { opacity: 0.6 }]}>
+          <Pressable 
+            style={({ pressed }) => [styles.menuRow, pressed && { opacity: 0.6 }]}
+            onPress={() => Alert.alert('Invoice Settings', 'Default Terms: Due on receipt\nGST Rate: 10%\nCurrency: AUD\n\nInvoices can be synced to Xero from the Profile screen.', [{ text: 'OK' }])}
+          >
             <View style={styles.settingInfo}>
               <Text style={styles.settingIcon}>🧾</Text>
               <Text style={styles.settingLabel}>Invoice Settings</Text>
