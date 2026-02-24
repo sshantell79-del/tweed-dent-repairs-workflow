@@ -72,7 +72,7 @@ export default function DashboardScreen() {
             <Text style={styles.username}>{user?.username || 'User'}</Text>
           </View>
           <TouchableOpacity style={styles.notificationButton}>
-            <Ionicons name="notifications-outline" size={24} color="#1F2937" />
+            <Text style={{fontSize: 20}}>🔔</Text>
           </TouchableOpacity>
         </View>
 
@@ -90,7 +90,7 @@ export default function DashboardScreen() {
         <View style={styles.statsGrid}>
           <View style={[styles.statCard, styles.primaryCard]}>
             <View style={styles.statIcon}>
-              <Ionicons name="car" size={24} color="#FFFFFF" />
+              <Text style={{fontSize: 20}}>🚗</Text>
             </View>
             <Text style={styles.statValue}>{stats?.total_jobs || 0}</Text>
             <Text style={styles.statLabel}>Total Jobs</Text>
@@ -98,7 +98,7 @@ export default function DashboardScreen() {
 
           <View style={styles.statCard}>
             <View style={[styles.statIcon, { backgroundColor: '#FEF3C7' }]}>
-              <Ionicons name="construct" size={24} color="#F59E0B" />
+              <Text style={{fontSize: 20}}>🔧</Text>
             </View>
             <Text style={styles.statValueDark}>{stats?.active_jobs || 0}</Text>
             <Text style={styles.statLabelDark}>Active</Text>
@@ -106,7 +106,7 @@ export default function DashboardScreen() {
 
           <View style={styles.statCard}>
             <View style={[styles.statIcon, { backgroundColor: '#D1FAE5' }]}>
-              <Ionicons name="checkmark-circle" size={24} color="#10B981" />
+              <Text style={{fontSize: 20}}>✅</Text>
             </View>
             <Text style={styles.statValueDark}>{stats?.completed_jobs || 0}</Text>
             <Text style={styles.statLabelDark}>Completed</Text>
@@ -172,7 +172,7 @@ export default function DashboardScreen() {
 
           {recentJobs.length === 0 ? (
             <View style={styles.emptyState}>
-              <Ionicons name="car-outline" size={48} color="#D1D5DB" />
+              <Text style={{fontSize: 36}}>🚗</Text>
               <Text style={styles.emptyText}>No jobs yet</Text>
               <TouchableOpacity
                 style={styles.addButton}
