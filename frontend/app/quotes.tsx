@@ -938,7 +938,7 @@ export default function QuotesScreen() {
                       style={[styles.actionButton, { backgroundColor: '#3B82F6' }]}
                       onPress={() => handleStatusChange(selectedQuote, 'Sent')}
                     >
-                      <Ionicons name="send" size={18} color="#FFFFFF" />
+                      <Text style={styles.actionIcon}>📤</Text>
                       <Text style={styles.actionButtonText}>Mark as Sent</Text>
                     </TouchableOpacity>
                   )}
@@ -947,7 +947,7 @@ export default function QuotesScreen() {
                       style={[styles.actionButton, { backgroundColor: '#10B981' }]}
                       onPress={() => handleConvertToJob(selectedQuote)}
                     >
-                      <Ionicons name="construct" size={18} color="#FFFFFF" />
+                      <Text style={styles.actionIcon}>🔧</Text>
                       <Text style={styles.actionButtonText}>Convert to Job</Text>
                     </TouchableOpacity>
                   )}
@@ -955,7 +955,7 @@ export default function QuotesScreen() {
                     style={[styles.actionButton, { backgroundColor: '#FEE2E2' }]}
                     onPress={() => handleDelete(selectedQuote)}
                   >
-                    <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                    <Text style={styles.actionIcon}>🗑️</Text>
                     <Text style={[styles.actionButtonText, { color: '#EF4444' }]}>Delete</Text>
                   </TouchableOpacity>
                 </View>
