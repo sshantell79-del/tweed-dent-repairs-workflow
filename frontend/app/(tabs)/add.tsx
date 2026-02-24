@@ -341,8 +341,11 @@ export default function AddJobScreen() {
         style={styles.keyboardView}
       >
         <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Text style={styles.backButtonText}>← Back</Text>
+          </TouchableOpacity>
           <Text style={styles.title}>Add New Job</Text>
-          <Text style={styles.subtitle}>Enter vehicle and job details</Text>
+          <View style={{ width: 60 }} />
         </View>
 
         <View style={styles.tabs}>
@@ -375,7 +378,7 @@ export default function AddJobScreen() {
                     <ActivityIndicator color="#FFFFFF" size="small" />
                   ) : (
                     <>
-                      <Ionicons name="scan" size={20} color="#FFFFFF" />
+                      <Text style={styles.scanIcon}>📷</Text>
                       <Text style={styles.scanPlateButtonText}>Scan Vehicle</Text>
                     </>
                   )}
@@ -385,7 +388,7 @@ export default function AddJobScreen() {
                   onPress={scanPlateFromGallery}
                   disabled={scanning}
                 >
-                  <Ionicons name="images-outline" size={20} color="#3B82F6" />
+                  <Text style={styles.galleryIcon}>🖼️</Text>
                 </TouchableOpacity>
               </View>
               {scanning && (
