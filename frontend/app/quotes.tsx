@@ -403,7 +403,7 @@ export default function QuotesScreen() {
         
         {item.vehicle_registration && (
           <View style={styles.vehicleInfo}>
-            <Ionicons name="car-outline" size={14} color="#6B7280" />
+            <Text style={styles.vehicleIcon}>🚗</Text>
             <Text style={styles.vehicleText}>
               {item.vehicle_registration} {item.vehicle_make && `- ${item.vehicle_make}`} {item.vehicle_model}
             </Text>
