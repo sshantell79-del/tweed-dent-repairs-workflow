@@ -349,7 +349,7 @@ export default function JobDetailScreen() {
             </ScrollView>
           ) : (
             <View style={styles.noPhotos}>
-              <Ionicons name="camera-outline" size={40} color="#D1D5DB" />
+              <Text style={{fontSize: 32}}>📷</Text>
               <Text style={styles.noPhotosText}>No photos yet</Text>
             </View>
           )}
@@ -358,7 +358,7 @@ export default function JobDetailScreen() {
         {/* Status History */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Ionicons name="time" size={20} color="#6B7280" />
+            <Text style={{fontSize: 18}}>⏱️</Text>
             <Text style={styles.cardTitle}>Status History</Text>
           </View>
           {job.status_history.map((entry, index) => (
@@ -379,7 +379,7 @@ export default function JobDetailScreen() {
         {job.activity_log && job.activity_log.length > 0 && (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Ionicons name="list" size={20} color="#8B5CF6" />
+              <Text style={{fontSize: 18}}>📋</Text>
               <Text style={styles.cardTitle}>Activity Log</Text>
             </View>
             {job.activity_log.slice().reverse().map((entry: any, index: number) => (
@@ -431,7 +431,7 @@ export default function JobDetailScreen() {
             <ActivityIndicator color="#FFFFFF" />
           ) : (
             <>
-              <Ionicons name="document-text-outline" size={20} color="#FFFFFF" />
+              <Text style={{fontSize: 16}}>📄</Text>
               <Text style={styles.createInvoiceText}>Create Invoice</Text>
             </>
           )}
