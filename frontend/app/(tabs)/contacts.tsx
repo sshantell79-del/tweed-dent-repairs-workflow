@@ -214,12 +214,12 @@ export default function ContactsScreen() {
       <View style={styles.footer}>
         {item.insurance_company && (
           <View style={styles.insuranceBadge}>
-            <Ionicons name="shield-checkmark-outline" size={12} color="#8B5CF6" />
+            <Text style={{fontSize: 10}}>🛡️</Text>
             <Text style={styles.insuranceText}>{item.insurance_company}</Text>
           </View>
         )}
         <View style={styles.jobsBadge}>
-          <Ionicons name="construct-outline" size={12} color="#3B82F6" />
+          <Text style={{fontSize: 10}}>🔧</Text>
           <Text style={styles.jobsText}>{item.jobs_count} jobs</Text>
         </View>
       </View>
@@ -244,12 +244,12 @@ export default function ContactsScreen() {
           <Text style={styles.subtitle}>{filteredCustomers.length} customers</Text>
         </View>
         <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
-          <Ionicons name="add" size={24} color="#FFFFFF" />
+          <Text style={{fontSize: 20, color: "#FFFFFF"}}>+</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.searchContainer}>
-        <Ionicons name="search-outline" size={20} color="#9CA3AF" style={styles.searchIcon} />
+        <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
           style={styles.searchInput}
           placeholder="Search by name, phone, rego..."
@@ -259,7 +259,7 @@ export default function ContactsScreen() {
         />
         {search ? (
           <TouchableOpacity onPress={() => setSearch('')}>
-            <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+            <Text style={{fontSize: 16, color: "#9CA3AF"}}>✕</Text>
           </TouchableOpacity>
         ) : null}
       </View>
@@ -273,7 +273,7 @@ export default function ContactsScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="people-outline" size={64} color="#D1D5DB" />
+            <Text style={{fontSize: 48}}>👥</Text>
             <Text style={styles.emptyTitle}>No contacts yet</Text>
             <Text style={styles.emptyText}>Add your first customer contact</Text>
             <TouchableOpacity style={styles.emptyButton} onPress={openAddModal}>
@@ -300,7 +300,7 @@ export default function ContactsScreen() {
                 {editingCustomer ? 'Edit Contact' : 'Add Contact'}
               </Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Text style={{fontSize: 20, color: "#6B7280"}}>✕</Text>
               </TouchableOpacity>
             </View>
 
