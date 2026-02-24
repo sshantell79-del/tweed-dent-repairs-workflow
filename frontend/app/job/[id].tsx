@@ -451,7 +451,7 @@ export default function JobDetailScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Update Status</Text>
               <TouchableOpacity onPress={() => setStatusModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Text style={{fontSize: 20, color: '#6B7280'}}>✕</Text>
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.modalScroll}>
@@ -473,7 +473,7 @@ export default function JobDetailScreen() {
                     {status}
                   </Text>
                   {job.status === status && (
-                    <Ionicons name="checkmark" size={20} color="#3B82F6" />
+                    <Text style={{fontSize: 18, color: '#3B82F6'}}>✓</Text>
                   )}
                 </TouchableOpacity>
               ))}
@@ -498,10 +498,10 @@ export default function JobDetailScreen() {
           <View style={styles.photoModalContent}>
             <View style={styles.photoModalHeader}>
               <TouchableOpacity onPress={() => setPhotoModalVisible(false)}>
-                <Ionicons name="close" size={28} color="#FFFFFF" />
+                <Text style={{fontSize: 24, color: '#FFFFFF'}}>✕</Text>
               </TouchableOpacity>
               <TouchableOpacity onPress={() => selectedPhoto && handleDeletePhoto(selectedPhoto)}>
-                <Ionicons name="trash-outline" size={24} color="#EF4444" />
+                <Text style={{fontSize: 22}}>🗑️</Text>
               </TouchableOpacity>
             </View>
             {selectedPhoto && job.photos.find(p => p.id === selectedPhoto) && (
