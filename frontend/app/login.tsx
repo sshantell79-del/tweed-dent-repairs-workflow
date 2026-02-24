@@ -48,7 +48,7 @@ export default function LoginScreen() {
         <View style={styles.content}>
           <View style={styles.header}>
             <View style={styles.iconContainer}>
-              <Ionicons name="car-sport" size={48} color="#3B82F6" />
+              <Text style={{fontSize: 40}}>🚗</Text>
             </View>
             <Text style={styles.title}>Tweed Dent Repairs</Text>
             <Text style={styles.subtitle}>Work Flow</Text>
@@ -56,7 +56,7 @@ export default function LoginScreen() {
 
           <View style={styles.form}>
             <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+              <Text style={styles.inputIcon}>✉️</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Email"
@@ -69,7 +69,7 @@ export default function LoginScreen() {
             </View>
 
             <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+              <Text style={styles.inputIcon}>🔒</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Password"
