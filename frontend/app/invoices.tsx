@@ -174,7 +174,7 @@ export default function InvoicesScreen() {
 
         <View style={styles.invoiceDetails}>
           <View style={styles.detailItem}>
-            <Ionicons name="calendar-outline" size={14} color="#9CA3AF" />
+            <Text style={{fontSize: 12}}>📅</Text>
             <Text style={styles.detailText}>
               {format(new Date(item.issue_date), 'dd MMM yyyy')}
             </Text>
@@ -209,7 +209,7 @@ export default function InvoicesScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#1F2937" />
+          <Text style={{fontSize: 16, fontWeight: "600", color: "#3B82F6"}}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Invoices</Text>
         <View style={styles.placeholder} />
@@ -234,7 +234,7 @@ export default function InvoicesScreen() {
       )}
 
       <View style={styles.searchContainer}>
-        <Ionicons name="search-outline" size={20} color="#9CA3AF" style={styles.searchIcon} />
+        <Text style={styles.searchIcon}>🔍</Text>
         <TextInput
           style={styles.searchInput}
           placeholder="Search invoices..."
@@ -276,7 +276,7 @@ export default function InvoicesScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="document-text-outline" size={64} color="#D1D5DB" />
+            <Text style={{fontSize: 48}}>📄</Text>
             <Text style={styles.emptyTitle}>No invoices yet</Text>
             <Text style={styles.emptyText}>Create an invoice from a job</Text>
           </View>
@@ -295,7 +295,7 @@ export default function InvoicesScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{selectedInvoice?.invoice_number}</Text>
               <TouchableOpacity onPress={() => setDetailModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Text style={{fontSize: 20, color: "#6B7280"}}>✕</Text>
               </TouchableOpacity>
             </View>
 
@@ -307,19 +307,19 @@ export default function InvoicesScreen() {
                   <Text style={styles.modalText}>{selectedInvoice.customer_name}</Text>
                   {selectedInvoice.customer_phone && (
                     <View style={styles.contactRow}>
-                      <Ionicons name="call-outline" size={14} color="#6B7280" />
+                      <Text style={{fontSize: 12}}>📞</Text>
                       <Text style={styles.modalSubtext}>{selectedInvoice.customer_phone}</Text>
                     </View>
                   )}
                   {selectedInvoice.customer_email && (
                     <View style={styles.contactRow}>
-                      <Ionicons name="mail-outline" size={14} color="#6B7280" />
+                      <Text style={{fontSize: 12}}>✉️</Text>
                       <Text style={styles.modalSubtext}>{selectedInvoice.customer_email}</Text>
                     </View>
                   )}
                   {selectedInvoice.customer_address && (
                     <View style={styles.contactRow}>
-                      <Ionicons name="location-outline" size={14} color="#6B7280" />
+                      <Text style={{fontSize: 12}}>📍</Text>
                       <Text style={styles.modalSubtext}>{selectedInvoice.customer_address}</Text>
                     </View>
                   )}
@@ -406,7 +406,7 @@ export default function InvoicesScreen() {
                       style={[styles.actionButton, { backgroundColor: '#3B82F6' }]}
                       onPress={() => handleStatusChange(selectedInvoice, 'Sent')}
                     >
-                      <Ionicons name="send" size={18} color="#FFFFFF" />
+                      <Text style={{fontSize: 14}}>📤</Text>
                       <Text style={styles.actionButtonText}>Mark as Sent</Text>
                     </TouchableOpacity>
                   )}
@@ -415,7 +415,7 @@ export default function InvoicesScreen() {
                       style={[styles.actionButton, { backgroundColor: '#10B981' }]}
                       onPress={() => handleStatusChange(selectedInvoice, 'Paid')}
                     >
-                      <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
+                      <Text style={{fontSize: 14}}>✅</Text>
                       <Text style={styles.actionButtonText}>Mark as Paid</Text>
                     </TouchableOpacity>
                   )}
@@ -429,7 +429,7 @@ export default function InvoicesScreen() {
                     {syncingToXero ? (
                       <ActivityIndicator size="small" color="#FFFFFF" />
                     ) : (
-                      <Ionicons name="cloud-upload-outline" size={18} color="#FFFFFF" />
+                      <Text style={{fontSize: 14}}>☁️</Text>
                     )}
                     <Text style={styles.actionButtonText}>
                       {syncingToXero ? 'Syncing...' : 'Sync to Xero'}
@@ -440,7 +440,7 @@ export default function InvoicesScreen() {
                     style={[styles.actionButton, { backgroundColor: '#FEE2E2' }]}
                     onPress={() => handleDelete(selectedInvoice)}
                   >
-                    <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                    <Text style={{fontSize: 14}}>🗑️</Text>
                     <Text style={[styles.actionButtonText, { color: '#EF4444' }]}>Delete</Text>
                   </TouchableOpacity>
                 </View>
