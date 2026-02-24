@@ -772,13 +772,15 @@ export default function QuotesScreen() {
                 
                 return (
                   <View key={num}>
-                    <TouchableOpacity
-                      style={[
+                    <Pressable
+                      style={({ pressed }) => [
                         styles.panelOption, 
                         isAdded && styles.panelOptionDisabled,
-                        isSelected && styles.panelOptionSelected
+                        isSelected && styles.panelOptionSelected,
+                        pressed && { opacity: 0.7 }
                       ]}
                       onPress={() => {
+                        console.log('Panel pressed:', panelNum);
                         if (!isAdded) {
                           if (isSelected) {
                             setSelectedPanelForAdd(null);
@@ -789,7 +791,6 @@ export default function QuotesScreen() {
                         }
                       }}
                       disabled={isAdded}
-                      activeOpacity={0.6}
                     >
                       <View style={[styles.panelOptionBadge, isSelected && styles.panelOptionBadgeSelected]}>
                         <Text style={[styles.panelOptionNumber, isSelected && { color: '#FFFFFF' }]}>{num}</Text>
@@ -802,7 +803,7 @@ export default function QuotesScreen() {
                       ) : (
                         <Text style={styles.expandIcon}>{isSelected ? '▼' : '▶'}</Text>
                       )}
-                    </TouchableOpacity>
+                    </Pressable>
                     
                     {/* Category buttons appear when panel is selected */}
                     {isSelected && !isAdded && (
@@ -814,14 +815,14 @@ export default function QuotesScreen() {
                             const isManual = catPrice === null || catPrice === undefined;
                             
                             return (
-                              <TouchableOpacity
+                              <Pressable
                                 key={cat}
-                                style={[
+                                style={({ pressed }) => [
                                   styles.categoryInlineBtn,
-                                  selectedCategoryForAdd === cat && styles.categoryInlineBtnActive
+                                  selectedCategoryForAdd === cat && styles.categoryInlineBtnActive,
+                                  pressed && { opacity: 0.7 }
                                 ]}
                                 onPress={() => setSelectedCategoryForAdd(cat)}
-                                activeOpacity={0.7}
                               >
                                 <Text style={[
                                   styles.categoryInlineBtnText,
