@@ -107,7 +107,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Pressable 
             style={({ pressed }) => [styles.menuRow, pressed && { opacity: 0.6 }]}
-            onPress={() => Alert.alert('Business Details', 'Business Name: Tweed Dent Repairs\nABN: Contact admin\nAddress: Tweed Heads, NSW', [{ text: 'OK' }])}
+            onPress={() => Alert.alert('Business Details', 'Tweed Dent Repairs\n\nPhone: 0419 942 817\n\nAddress:\n7/63 Ourimba Road\nTweed Heads NSW 2485\n\nABN: 15 432 425 498', [{ text: 'OK' }])}
           >
             <View style={styles.settingInfo}>
               <Text style={styles.settingIcon}>🏢</Text>
