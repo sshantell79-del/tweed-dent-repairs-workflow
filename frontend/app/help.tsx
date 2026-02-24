@@ -59,23 +59,23 @@ export default function HelpScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.sectionTitle}>Contact Us</Text>
         <View style={styles.contactCard}>
-          <TouchableOpacity style={styles.contactOption} onPress={() => Linking.openURL('tel:+61400000000')}>
+          <TouchableOpacity style={styles.contactOption} onPress={() => Linking.openURL('tel:0402532011')}>
             <View style={[styles.contactIcon, { backgroundColor: '#DCFCE7' }]}>
               <Text style={styles.contactIconText}>📞</Text>
             </View>
             <View>
               <Text style={styles.contactLabel}>Phone Support</Text>
-              <Text style={styles.contactValue}>Call us anytime</Text>
+              <Text style={styles.contactValue}>0402 532 011</Text>
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.contactOption} onPress={() => Linking.openURL('mailto:support@tweeddentrepairs.com.au')}>
+          <TouchableOpacity style={styles.contactOption} onPress={() => Linking.openURL('mailto:admin@tweeddentrepairs.com.au')}>
             <View style={[styles.contactIcon, { backgroundColor: '#DBEAFE' }]}>
               <Text style={styles.contactIconText}>✉️</Text>
             </View>
             <View>
               <Text style={styles.contactLabel}>Email Support</Text>
-              <Text style={styles.contactValue}>support@tweeddentrepairs.com.au</Text>
+              <Text style={styles.contactValue}>admin@tweeddentrepairs.com.au</Text>
             </View>
           </TouchableOpacity>
         </View>
