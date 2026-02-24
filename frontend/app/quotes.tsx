@@ -765,7 +765,17 @@ export default function QuotesScreen() {
             </View>
             <Text style={styles.panelModalSubtitle}>Tap a panel, then select damage category</Text>
             <ScrollView style={styles.panelList}>
-              {panelPricing && Object.entries(panelPricing.panels).map(([num, name]) => {
+              {!panelPricing ? (
+                <View style={{ padding: 20, alignItems: 'center' }}>
+                  <ActivityIndicator size="large" color="#3B82F6" />
+                  <Text style={{ marginTop: 10, color: '#6B7280' }}>Loading panels...</Text>
+                </View>
+              ) : Object.entries(panelPricing.panels).length === 0 ? (
+                <View style={{ padding: 20, alignItems: 'center' }}>
+                  <Text style={{ color: '#6B7280' }}>No panels available</Text>
+                </View>
+              ) : (
+                Object.entries(panelPricing.panels).map(([num, name]) => {
                 const panelNum = parseInt(num);
                 const isAdded = damageItems.some(d => d.panel_number === panelNum);
                 const isSelected = selectedPanelForAdd === panelNum;
