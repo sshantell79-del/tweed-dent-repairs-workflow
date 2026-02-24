@@ -164,7 +164,7 @@ export default function JobDetailScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle" size={64} color="#EF4444" />
+          <Text style={{fontSize: 48}}>⚠️</Text>
           <Text style={styles.errorText}>Job not found</Text>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Text style={styles.backButtonText}>Go Back</Text>
@@ -178,7 +178,7 @@ export default function JobDetailScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.headerButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#1F2937" />
+          <Text style={{fontSize: 16, fontWeight: "600", color: "#3B82F6"}}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Job Details</Text>
         <TouchableOpacity 
@@ -186,7 +186,7 @@ export default function JobDetailScreen() {
           onPress={handleDeleteJob}
           activeOpacity={0.6}
         >
-          <Ionicons name="trash-outline" size={22} color="#FFFFFF" />
+          <Text style={{fontSize: 16, color: "#FFFFFF"}}>🗑️</Text>
         </TouchableOpacity>
       </View>
 
@@ -198,7 +198,7 @@ export default function JobDetailScreen() {
         >
           <View style={styles.statusHeader}>
             <Text style={styles.statusLabel}>Current Status</Text>
-            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+            <Text style={{fontSize: 18, color: "#9CA3AF"}}>›</Text>
           </View>
           <StatusBadge status={job.status} size="large" />
         </TouchableOpacity>
@@ -206,7 +206,7 @@ export default function JobDetailScreen() {
         {/* Car Info */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Ionicons name="car" size={20} color="#3B82F6" />
+            <Text style={{fontSize: 18}}>🚗</Text>
             <Text style={styles.cardTitle}>Vehicle Information</Text>
           </View>
           <Text style={styles.registration}>{job.car_info.registration}</Text>
@@ -230,7 +230,7 @@ export default function JobDetailScreen() {
         {/* Owner Info */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Ionicons name="person" size={20} color="#10B981" />
+            <Text style={{fontSize: 18}}>👤</Text>
             <Text style={styles.cardTitle}>Owner Information</Text>
           </View>
           <View style={styles.infoRow}>
@@ -261,7 +261,7 @@ export default function JobDetailScreen() {
         {job.insurance_info?.company && (
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <Ionicons name="shield-checkmark" size={20} color="#8B5CF6" />
+              <Text style={{fontSize: 18}}>🛡️</Text>
               <Text style={styles.cardTitle}>Insurance Information</Text>
             </View>
             <View style={styles.infoRow}>
@@ -286,7 +286,7 @@ export default function JobDetailScreen() {
         {/* Damage & Cost */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Ionicons name="construct" size={20} color="#F59E0B" />
+            <Text style={{fontSize: 18}}>🔧</Text>
             <Text style={styles.cardTitle}>Job Details</Text>
           </View>
           <Text style={styles.damageTitle}>Damage Description</Text>
@@ -319,10 +319,10 @@ export default function JobDetailScreen() {
         {/* Photos */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
-            <Ionicons name="images" size={20} color="#EC4899" />
+            <Text style={{fontSize: 18}}>🖼️</Text>
             <Text style={styles.cardTitle}>Photos ({job.photos.length})</Text>
             <TouchableOpacity style={styles.addPhotoButton} onPress={handleAddPhoto}>
-              <Ionicons name="add" size={20} color="#3B82F6" />
+              <Text style={{fontSize: 16, color: "#3B82F6"}}>+</Text>
             </TouchableOpacity>
           </View>
           
