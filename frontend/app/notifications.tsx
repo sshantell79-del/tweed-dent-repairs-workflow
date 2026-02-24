@@ -44,7 +44,7 @@ export default function NotificationsScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {notifications.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Ionicons name="notifications-off-outline" size={64} color="#D1D5DB" />
+            <Text style={{fontSize: 48}}>🔔</Text>
             <Text style={styles.emptyTitle}>No Notifications</Text>
             <Text style={styles.emptyText}>You're all caught up!</Text>
           </View>
@@ -58,7 +58,7 @@ export default function NotificationsScreen() {
               ]}
             >
               <View style={[styles.iconContainer, { backgroundColor: '#DBEAFE' }]}>
-                <Ionicons name="information-circle" size={24} color="#3B82F6" />
+                <Text style={{fontSize: 20}}>ℹ️</Text>
               </View>
               <View style={styles.notificationContent}>
                 <Text style={styles.notificationTitle}>{notification.title}</Text>

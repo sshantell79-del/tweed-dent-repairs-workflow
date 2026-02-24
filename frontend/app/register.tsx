@@ -60,7 +60,7 @@ export default function RegisterScreen() {
       >
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={24} color="#1F2937" />
+            <Text style={{fontSize: 16, fontWeight: "600", color: "#3B82F6"}}>← Back</Text>
           </TouchableOpacity>
 
           <View style={styles.header}>
@@ -70,7 +70,7 @@ export default function RegisterScreen() {
 
           <View style={styles.form}>
             <View style={styles.inputContainer}>
-              <Ionicons name="person-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+              <Text style={styles.inputIcon}>👤</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Username"
@@ -82,7 +82,7 @@ export default function RegisterScreen() {
             </View>
 
             <View style={styles.inputContainer}>
-              <Ionicons name="mail-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+              <Text style={styles.inputIcon}>✉️</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Email"
@@ -95,7 +95,7 @@ export default function RegisterScreen() {
             </View>
 
             <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+              <Text style={styles.inputIcon}>🔒</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Password"
@@ -114,7 +114,7 @@ export default function RegisterScreen() {
             </View>
 
             <View style={styles.inputContainer}>
-              <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+              <Text style={styles.inputIcon}>🔒</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Confirm Password"
