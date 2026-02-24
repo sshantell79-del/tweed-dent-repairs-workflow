@@ -77,7 +77,7 @@ export default function SettingsScreen() {
 
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Ionicons name="save-outline" size={22} color="#6B7280" />
+              <Text style={styles.settingIcon}>💾</Text>
               <Text style={styles.settingLabel}>Auto-save Drafts</Text>
             </View>
             <Switch
@@ -90,7 +90,7 @@ export default function SettingsScreen() {
 
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Ionicons name="moon-outline" size={22} color="#6B7280" />
+              <Text style={styles.settingIcon}>🌙</Text>
               <Text style={styles.settingLabel}>Dark Mode</Text>
             </View>
             <Switch
@@ -105,41 +105,41 @@ export default function SettingsScreen() {
         {/* Business Settings */}
         <Text style={styles.sectionTitle}>Business Settings</Text>
         <View style={styles.section}>
-          <TouchableOpacity style={styles.menuRow}>
+          <Pressable style={({ pressed }) => [styles.menuRow, pressed && { opacity: 0.6 }]}>
             <View style={styles.settingInfo}>
-              <Ionicons name="business-outline" size={22} color="#6B7280" />
+              <Text style={styles.settingIcon}>🏢</Text>
               <Text style={styles.settingLabel}>Business Details</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-          </TouchableOpacity>
+            <Text style={styles.chevron}>›</Text>
+          </Pressable>
 
-          <TouchableOpacity style={styles.menuRow}>
+          <Pressable style={({ pressed }) => [styles.menuRow, pressed && { opacity: 0.6 }]}>
             <View style={styles.settingInfo}>
-              <Ionicons name="pricetag-outline" size={22} color="#6B7280" />
+              <Text style={styles.settingIcon}>🏷️</Text>
               <Text style={styles.settingLabel}>Panel Pricing</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-          </TouchableOpacity>
+            <Text style={styles.chevron}>›</Text>
+          </Pressable>
 
-          <TouchableOpacity style={styles.menuRow}>
+          <Pressable style={({ pressed }) => [styles.menuRow, pressed && { opacity: 0.6 }]}>
             <View style={styles.settingInfo}>
-              <Ionicons name="receipt-outline" size={22} color="#6B7280" />
+              <Text style={styles.settingIcon}>🧾</Text>
               <Text style={styles.settingLabel}>Invoice Settings</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-          </TouchableOpacity>
+            <Text style={styles.chevron}>›</Text>
+          </Pressable>
         </View>
 
         {/* Data */}
         <Text style={styles.sectionTitle}>Data</Text>
         <View style={styles.section}>
-          <TouchableOpacity style={styles.menuRow} onPress={handleClearCache}>
+          <Pressable style={({ pressed }) => [styles.menuRow, pressed && { opacity: 0.6 }]} onPress={handleClearCache}>
             <View style={styles.settingInfo}>
-              <Ionicons name="trash-outline" size={22} color="#EF4444" />
+              <Text style={styles.settingIcon}>🗑️</Text>
               <Text style={[styles.settingLabel, { color: '#EF4444' }]}>Clear Cache</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-          </TouchableOpacity>
+            <Text style={styles.chevron}>›</Text>
+          </Pressable>
         </View>
 
         {/* About */}
