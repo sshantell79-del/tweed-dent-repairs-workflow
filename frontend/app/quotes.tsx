@@ -836,7 +836,7 @@ export default function QuotesScreen() {
                                 ]}>
                                   {isManual ? 'Manual' : `$${catPrice}`}
                                 </Text>
-                              </TouchableOpacity>
+                              </Pressable>
                             );
                           })}
                         </View>
