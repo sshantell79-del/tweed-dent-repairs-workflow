@@ -3,14 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
+  Pressable,
   Switch,
   ScrollView,
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SettingsScreen() {
@@ -20,11 +19,8 @@ export default function SettingsScreen() {
   const [autoSave, setAutoSave] = useState(true);
 
   const goBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(tabs)/profile');
-    }
+    console.log('Back pressed');
+    router.push('/(tabs)/profile');
   };
 
   const handleClearCache = () => {
@@ -52,15 +48,12 @@ export default function SettingsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <TouchableOpacity 
+        <Pressable 
           onPress={goBack} 
-          style={styles.backButton}
-          activeOpacity={0.7}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          data-testid="settings-back-btn"
+          style={({ pressed }) => [styles.backButton, pressed && { opacity: 0.6 }]}
         >
           <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
+        </Pressable>
         <Text style={styles.headerTitle}>Settings</Text>
         <View style={{ width: 60 }} />
       </View>
@@ -71,7 +64,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <View style={styles.settingRow}>
             <View style={styles.settingInfo}>
-              <Ionicons name="notifications-outline" size={22} color="#6B7280" />
+              <Text style={styles.settingIcon}>🔔</Text>
               <Text style={styles.settingLabel}>Push Notifications</Text>
             </View>
             <Switch
