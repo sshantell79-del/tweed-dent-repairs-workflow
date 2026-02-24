@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { jobsAPI, invoicesAPI } from '../../src/services/api';
 import { Job, JOB_STATUSES, STATUS_COLORS } from '../../src/types';
