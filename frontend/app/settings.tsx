@@ -230,9 +230,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
+  settingIcon: {
+    fontSize: 20,
+  },
   settingLabel: {
     fontSize: 15,
     color: '#374151',
+  },
+  chevron: {
+    fontSize: 24,
+    color: '#9CA3AF',
+    fontWeight: '300',
   },
   infoRow: {
     flexDirection: 'row',
