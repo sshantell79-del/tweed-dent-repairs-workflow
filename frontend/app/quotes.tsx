@@ -504,7 +504,7 @@ export default function QuotesScreen() {
         }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Ionicons name="document-outline" size={64} color="#D1D5DB" />
+            <Text style={styles.emptyIcon}>📄</Text>
             <Text style={styles.emptyTitle}>No Quotes</Text>
             <Text style={styles.emptyText}>
               Create your first quote by tapping the + button
@@ -529,7 +529,7 @@ export default function QuotesScreen() {
                 setCreateModalVisible(false);
                 resetForm();
               }}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Text style={styles.modalCloseText}>✕</Text>
               </TouchableOpacity>
               <Text style={styles.modalTitle}>New Quote</Text>
               <View style={{ width: 24 }} />
