@@ -646,7 +646,7 @@ export default function QuotesScreen() {
                         </View>
                         <Text style={styles.panelName}>{item.panel_name}</Text>
                         <TouchableOpacity onPress={() => removeDamageItem(index)}>
-                          <Ionicons name="close-circle" size={24} color="#EF4444" />
+                          <Text style={styles.removeIcon}>✕</Text>
                         </TouchableOpacity>
                       </View>
                       
