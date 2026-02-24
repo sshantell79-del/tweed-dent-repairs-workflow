@@ -180,7 +180,7 @@ export default function InvoicesScreen() {
             </Text>
           </View>
           <View style={styles.detailItem}>
-            <Ionicons name="time-outline" size={14} color={isOverdue ? '#EF4444' : '#9CA3AF'} />
+            <Text style={{fontSize: 12}}>{isOverdue ? '⚠️' : '⏰'}</Text>
             <Text style={[styles.detailText, isOverdue && styles.overdueText]}>
               Due: {format(new Date(item.due_date), 'dd MMM yyyy')}
             </Text>
