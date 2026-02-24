@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { jobsAPI } from '../../src/services/api';
 import { Job, JOB_STATUSES, STATUS_COLORS } from '../../src/types';
 import JobCard from '../../src/components/JobCard';

@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { dashboardAPI, jobsAPI } from '../../src/services/api';
 import { DashboardStats, Job, JOB_STATUSES, STATUS_COLORS } from '../../src/types';
 import { useAuth } from '../../src/contexts/AuthContext';
