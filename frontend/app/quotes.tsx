@@ -862,7 +862,8 @@ export default function QuotesScreen() {
                     )}
                   </View>
                 );
-              })}
+              })
+              )}
             </ScrollView>
           </View>
         </View>
