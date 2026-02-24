@@ -173,6 +173,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 14,
   },
+  contactIconText: {
+    fontSize: 22,
+  },
   contactLabel: {
     fontSize: 15,
     fontWeight: '600',
