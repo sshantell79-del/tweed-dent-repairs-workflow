@@ -859,69 +859,6 @@ export default function QuotesScreen() {
         </View>
       </Modal>
 
-                {/* Category Selection Buttons */}
-                <View style={styles.categorySelectionContainer}>
-                  <Text style={styles.categorySelectionTitle}>Choose Damage Category:</Text>
-                  <View style={styles.categoryGrid}>
-                    {CATEGORIES.map((cat) => {
-                      const catPrice = selectedPanelForAdd !== null 
-                        ? panelPricing?.pricing[selectedPanelForAdd]?.[cat] 
-                        : null;
-                      const isManual = catPrice === null || catPrice === undefined;
-                      const isSelected = selectedCategoryForAdd === cat;
-                      
-                      return (
-                        <TouchableOpacity
-                          key={cat}
-                          style={[
-                            styles.categorySelectButton,
-                            isSelected && styles.categorySelectButtonActive,
-                          ]}
-                          onPress={() => setSelectedCategoryForAdd(cat)}
-                        >
-                          <Text style={[
-                            styles.categorySelectNumber,
-                            isSelected && styles.categorySelectNumberActive,
-                          ]}>
-                            Cat {cat}
-                          </Text>
-                          {isManual ? (
-                            <Text style={[
-                              styles.categorySelectPrice,
-                              isSelected && styles.categorySelectPriceActive,
-                            ]}>
-                              Manual
-                            </Text>
-                          ) : (
-                            <Text style={[
-                              styles.categorySelectPrice,
-                              isSelected && styles.categorySelectPriceActive,
-                            ]}>
-                              ${catPrice}
-                            </Text>
-                          )}
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                </View>
-
-                {/* Add Panel Button */}
-                <TouchableOpacity
-                  style={styles.addPanelConfirmButton}
-                  onPress={() => addPanelWithCategory(selectedCategoryForAdd)}
-                >
-                  <Text style={styles.addPanelConfirmIcon}>+</Text>
-                  <Text style={styles.addPanelConfirmText}>
-                    Add Panel with Category {selectedCategoryForAdd}
-                  </Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
-
       {/* Quote Detail Modal */}
       <Modal
         visible={detailModalVisible}
@@ -934,7 +871,7 @@ export default function QuotesScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{selectedQuote?.quote_number}</Text>
               <TouchableOpacity onPress={() => setDetailModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
+                <Text style={styles.closeButtonText}>✕</Text>
               </TouchableOpacity>
             </View>
 
