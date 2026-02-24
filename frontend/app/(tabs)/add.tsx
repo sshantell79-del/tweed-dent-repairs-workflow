@@ -566,11 +566,11 @@ export default function AddJobScreen() {
 
               <View style={styles.photoButtons}>
                 <TouchableOpacity style={styles.photoButton} onPress={takePhoto}>
-                  <Ionicons name="camera" size={24} color="#3B82F6" />
+                  <Text style={styles.photoIcon}>📷</Text>
                   <Text style={styles.photoButtonText}>Take Photo</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.photoButton} onPress={pickImage}>
-                  <Ionicons name="images" size={24} color="#3B82F6" />
+                  <Text style={styles.photoIcon}>🖼️</Text>
                   <Text style={styles.photoButtonText}>Gallery</Text>
                 </TouchableOpacity>
               </View>
@@ -579,14 +579,14 @@ export default function AddJobScreen() {
                 {photos.map((photo, index) => (
                   <View key={index} style={styles.photoContainer}>
                     <View style={styles.photoPlaceholder}>
-                      <Ionicons name="image" size={32} color="#9CA3AF" />
+                      <Text style={styles.photoIcon}>🖼️</Text>
                       <Text style={styles.photoIndex}>Photo {index + 1}</Text>
                     </View>
                     <TouchableOpacity
                       style={styles.removePhoto}
                       onPress={() => removePhoto(index)}
                     >
-                      <Ionicons name="close-circle" size={24} color="#EF4444" />
+                      <Text style={styles.removePhotoIcon}>✕</Text>
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -594,7 +594,7 @@ export default function AddJobScreen() {
 
               {photos.length === 0 && (
                 <View style={styles.noPhotos}>
-                  <Ionicons name="camera-outline" size={48} color="#D1D5DB" />
+                  <Text style={styles.noPhotosIcon}>📷</Text>
                   <Text style={styles.noPhotosText}>No photos added yet</Text>
                 </View>
               )}
@@ -613,7 +613,7 @@ export default function AddJobScreen() {
                   <ActivityIndicator color="#10B981" />
                 ) : (
                   <>
-                    <Ionicons name="flash" size={20} color="#10B981" />
+                    <Text style={styles.quickIcon}>⚡</Text>
                     <Text style={styles.quickCreateButtonText}>Quick Create (Add details later)</Text>
                   </>
                 )}
