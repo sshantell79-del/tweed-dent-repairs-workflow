@@ -392,23 +392,13 @@ export default function JobDetailScreen() {
                     entry.action === 'photo_deleted' ? '#FEE2E2' :
                     '#F3F4F6'
                 }]}>
-                  <Ionicons 
-                    name={
-                      entry.action === 'created' ? 'add-circle' :
-                      entry.action === 'status_changed' ? 'swap-horizontal' :
-                      entry.action === 'photo_added' ? 'camera' :
-                      entry.action === 'photo_deleted' ? 'trash' :
-                      'create'
-                    } 
-                    size={14} 
-                    color={
-                      entry.action === 'created' ? '#10B981' :
-                      entry.action === 'status_changed' ? '#3B82F6' :
-                      entry.action === 'photo_added' ? '#EC4899' :
-                      entry.action === 'photo_deleted' ? '#EF4444' :
-                      '#6B7280'
-                    } 
-                  />
+                  <Text style={{fontSize: 12}}>
+                    {entry.action === 'created' ? '✅' :
+                     entry.action === 'status_changed' ? '🔄' :
+                     entry.action === 'photo_added' ? '📷' :
+                     entry.action === 'photo_deleted' ? '🗑️' :
+                     '✏️'}
+                  </Text>
                 </View>
                 <View style={styles.activityContent}>
                   <Text style={styles.activityText}>{entry.details}</Text>
