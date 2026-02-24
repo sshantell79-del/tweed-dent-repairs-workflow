@@ -1001,6 +1001,7 @@ const styles = StyleSheet.create({
   dateText: { fontSize: 12, color: '#9CA3AF' },
   totalAmount: { fontSize: 18, fontWeight: '700', color: '#059669' },
   emptyContainer: { alignItems: 'center', paddingTop: 60 },
+  emptyIcon: { fontSize: 64 },
   emptyTitle: { fontSize: 18, fontWeight: '600', color: '#374151', marginTop: 16 },
   emptyText: { fontSize: 14, color: '#9CA3AF', marginTop: 8, textAlign: 'center' },
   modalContainer: { flex: 1, backgroundColor: '#F9FAFB' },
