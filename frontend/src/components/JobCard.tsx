@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { Job } from '../types';
 import StatusBadge from './StatusBadge';
 import { format } from 'date-fns';
@@ -24,10 +23,14 @@ export default function JobCard({ job, onPress }: JobCardProps) {
       </View>
 
       <View style={styles.ownerRow}>
-        <Ionicons name="person-outline" size={16} color="#6B7280" />
-        <Text style={styles.ownerName}>{job.owner_info.name}</Text>
-        <Ionicons name="call-outline" size={16} color="#6B7280" style={styles.phoneIcon} />
-        <Text style={styles.phone}>{job.owner_info.phone}</Text>
+        <Text style={styles.iconSmall}>👤</Text>
+        <Text style={styles.ownerName}>{job.owner_info?.name || 'No owner'}</Text>
+        {job.owner_info?.phone && (
+          <>
+            <Text style={[styles.iconSmall, styles.phoneIcon]}>📞</Text>
+            <Text style={styles.phone}>{job.owner_info.phone}</Text>
+          </>
+        )}
       </View>
 
       <Text style={styles.damage} numberOfLines={2}>
@@ -36,19 +39,22 @@ export default function JobCard({ job, onPress }: JobCardProps) {
 
       <View style={styles.footer}>
         <View style={styles.dateRow}>
-          <Ionicons name="calendar-outline" size={14} color="#9CA3AF" />
+          <Text style={styles.iconSmall}>📅</Text>
           <Text style={styles.date}>
             {format(new Date(job.created_at), 'dd MMM yyyy')}
           </Text>
+          {job.created_by && (
+            <Text style={styles.createdBy}> • Added by {job.created_by}</Text>
+          )}
         </View>
         {job.estimated_cost && (
           <Text style={styles.cost}>${job.estimated_cost.toLocaleString()}</Text>
         )}
       </View>
 
-      {job.photos.length > 0 && (
+      {job.photos && job.photos.length > 0 && (
         <View style={styles.photoBadge}>
-          <Ionicons name="camera" size={12} color="#6B7280" />
+          <Text style={styles.iconTiny}>📷</Text>
           <Text style={styles.photoCount}>{job.photos.length}</Text>
         </View>
       )}
@@ -93,6 +99,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
+  iconSmall: {
+    fontSize: 14,
+  },
+  iconTiny: {
+    fontSize: 12,
+  },
   ownerName: {
     fontSize: 14,
     color: '#374151',
@@ -120,11 +132,17 @@ const styles = StyleSheet.create({
   dateRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexWrap: 'wrap',
+    flex: 1,
   },
   date: {
     fontSize: 12,
     color: '#9CA3AF',
     marginLeft: 4,
+  },
+  createdBy: {
+    fontSize: 12,
+    color: '#3B82F6',
   },
   cost: {
     fontSize: 16,
