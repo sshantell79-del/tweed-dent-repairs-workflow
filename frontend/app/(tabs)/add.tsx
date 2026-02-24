@@ -786,6 +786,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
+  scanIcon: {
+    fontSize: 18,
+  },
+  galleryIcon: {
+    fontSize: 20,
+  },
   scanningText: {
     fontSize: 13,
     color: '#3B82F6',
