@@ -736,7 +736,7 @@ export default function QuotesScreen() {
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (
                   <>
-                    <Ionicons name="checkmark" size={20} color="#FFFFFF" />
+                    <Text style={styles.buttonIcon}>✓</Text>
                     <Text style={styles.createButtonText}>Create Quote</Text>
                   </>
                 )}
