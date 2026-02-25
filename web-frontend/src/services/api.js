@@ -117,7 +117,27 @@ export const invoicesAPI = {
 // Scan API
 export const scanAPI = {
   scanPlate: async (imageBase64) => {
-    const response = await api.post('/scan-plate', { image: imageBase64 });
+    const response = await api.post('/scan-plate', { image_base64: imageBase64 });
+    return response.data;
+  },
+  analyzeDamage: async (imageBase64) => {
+    const response = await api.post('/analyze-damage', { image_base64: imageBase64 });
+    return response.data;
+  },
+};
+
+// Xero API
+export const xeroAPI = {
+  getStatus: async () => {
+    const response = await api.get('/xero/status');
+    return response.data;
+  },
+  getAuthUrl: async () => {
+    const response = await api.get('/xero/auth');
+    return response.data;
+  },
+  syncInvoice: async (invoiceId) => {
+    const response = await api.post(`/xero/sync_invoice/${invoiceId}`);
     return response.data;
   },
 };
