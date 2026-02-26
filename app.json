@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "Tweed Dent Repairs",
+    "slug": "tweed-dent-repairs",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "tweeddentrepairs",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tweeddentrepairs.workflow",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Take photos of vehicle damage for job records",
+        "NSPhotoLibraryUsageDescription": "Select damage photos from your gallery"
+      }
+    }
+  }
+}
