@@ -1,76 +1,110 @@
-# Tweed Dent Repairs - Work Flow App
+# Tweed Dent Repairs Workflow - Product Requirements Document
 
 ## Original Problem Statement
-Mobile app for a smash repairs business to manage cars that come in and out for work.
+Build a mobile/web app for a smash repairs business to manage cars coming in and out for repair work.
 
-## Core Features Implemented
-- **Authentication**: JWT-based user registration/login
-- **Jobs Management**: Full CRUD with status flow, photo uploads, AI plate scanning
-- **Quoting System**: AI-powered damage analysis, category-based pricing matrix (Cat 1-5), panel selection with prices
-- **Invoicing**: Create/manage invoices with line items, GST, status updates
-- **Contacts**: Customer management
-- **Xero Integration**: OAuth2 flow for syncing invoices
-- **Activity Tracking**: Employee activity logs for job changes
+## Core Features
+- **User Authentication**: JWT-based login/registration
+- **Job Management**: Create, view, update status, delete jobs
+- **Vehicle Information**: Registration, make, model, year, color, VIN
+- **Owner Information**: Name, phone, email, address
+- **Insurance Information**: Company, claim number, policy number
+- **Damage Photos**: Upload and view photos of damage
+- **AI Features**: License plate scanning, damage analysis
+- **Quotes**: Category-based pricing matrix (Cat 1-5) for panels
+- **Invoices**: Invoice management with GST calculation
+- **Contacts**: Customer contact management
+- **Activity Tracking**: Employee activity logging
 
 ## Tech Stack
-- **Frontend**: Expo (React Native) with expo-router
+- **Frontend**: React (Vite) + Tailwind CSS + React Router
 - **Backend**: FastAPI (Python)
 - **Database**: MongoDB
-- **AI**: OpenAI GPT-4 Vision API via Emergent LLM Key
+- **AI**: OpenAI GPT-4 Vision (via Emergent LLM Key)
+- **3rd Party**: Xero integration for invoice syncing
 
-## What's Been Implemented (Feb 23, 2026)
+## Architecture
+```
+/app
+├── backend/          # FastAPI backend (stable)
+│   └── server.py     # All API endpoints
+└── web-frontend/     # React web app (NEW - replaces old Expo app)
+    ├── src/
+    │   ├── components/Layout.jsx
+    │   ├── context/AuthContext.jsx
+    │   ├── pages/
+    │   │   ├── Login.jsx
+    │   │   ├── Register.jsx
+    │   │   ├── Dashboard.jsx
+    │   │   ├── Jobs.jsx
+    │   │   ├── JobDetail.jsx
+    │   │   ├── AddJob.jsx
+    │   │   ├── Contacts.jsx
+    │   │   ├── Quotes.jsx
+    │   │   ├── Invoices.jsx
+    │   │   └── Profile.jsx
+    │   └── services/api.js
+    └── vite.config.js
+```
 
-### Completed in This Session
-1. **Quotes "Add Panel" Category Selection** (COMPLETED)
-   - Two-step flow: Step 1 (Select Panel) -> Step 2 (Select Category with prices)
-   - Category buttons (Cat 1-5) show prices from pricing matrix
-   - Panel added with selected category and price
-   
-2. **Back Button Navigation Fix** (COMPLETED)
-   - Fixed invisible Ionicon issue on web by using text-based "← Back" button
-   - Settings, Notifications, Help screens now have visible, working back buttons
-   - Users can navigate back to Profile from all three screens
+## What's Been Implemented (December 2025)
 
-## Pending Issues
-- **P1**: Job list does not refresh automatically after deleting a job
-- **P2**: "Returning Customer" feature untested
+### Completed
+- ✅ Full frontend migration from Expo (React Native) to React (Vite) web app
+- ✅ User authentication (login/register) with JWT
+- ✅ Dashboard with statistics and recent jobs
+- ✅ Jobs list with search and status filtering
+- ✅ Job detail view with all information sections
+- ✅ Job status update via dropdown
+- ✅ Add Job with multi-step form (Vehicle, Owner, Insurance, Job Details)
+- ✅ AI plate scanning button (connected to backend)
+- ✅ Contacts management (add, view, delete)
+- ✅ Quotes with category-based panel pricing (Cat 1-5)
+- ✅ Invoices with status filtering and detail modal
+- ✅ Profile page with business info and logout
+- ✅ Bottom tab navigation
+- ✅ All pages tested and working
 
-## Prioritized Backlog
+### Backend Features (Already Stable)
+- ✅ All CRUD APIs for Jobs, Customers, Quotes, Invoices
+- ✅ AI endpoints for plate scanning and damage analysis
+- ✅ Xero OAuth2 integration
+- ✅ Activity logging
 
-### P0 (Critical) - None
-
-### P1 (High Priority)
-- Test job list refresh after deletion
-- Test Returning Customer auto-fill feature
-- Full regression test of Xero integration
-
-### P2 (Medium Priority)
-- Populate Settings page with functional options (Business Details, Panel Pricing, Invoice Settings currently placeholders)
-- Add real notification system
-
-### P3 (Low Priority/Future)
-- Break down large components (quotes.tsx, invoices.tsx, [id].tsx)
-- Add proper test coverage
-- Dark mode implementation
-
-## API Endpoints
-- `/api/auth/*` - Authentication
-- `/api/jobs/*` - Job management
-- `/api/quotes/*` - Quote management
-- `/api/invoices/*` - Invoice management
-- `/api/customers/*` - Customer management
-- `/api/xero/*` - Xero integration
-- `/api/scan-plate` - AI plate scanning
-- `/api/analyze-damage` - AI damage analysis
-- `/api/panel-pricing` - Panel pricing matrix
+## Preview URL
+https://tweed-job-manager.preview.emergentagent.com
 
 ## Test Credentials
-- Email: test@test.com
-- Password: test123
+- Email: webuser@example.com
+- Password: password123
 
-## Key Files
-- `/app/frontend/app/quotes.tsx` - Quoting with category selection
-- `/app/frontend/app/settings.tsx` - Settings page
-- `/app/frontend/app/notifications.tsx` - Notifications page
-- `/app/frontend/app/help.tsx` - Help & Support page
-- `/app/backend/server.py` - All backend APIs
+## Pending/Future Tasks
+
+### P1 - High Priority
+- [ ] Test AI plate scanning end-to-end
+- [ ] Test Xero integration end-to-end
+- [ ] Add "Returning Customer" auto-fill feature
+
+### P2 - Medium Priority
+- [ ] Populate Settings page with actual settings
+- [ ] Populate Notifications page with notification preferences
+- [ ] Populate Help page with FAQ/support info
+
+### P3 - Nice to Have
+- [ ] Add photo upload to Add Job form
+- [ ] Add invoice creation from job detail
+- [ ] Add quote-to-job conversion
+- [ ] Dark mode support
+
+## Database Collections
+- `users`: User accounts with hashed passwords
+- `jobs`: Job records with vehicle, owner, insurance info
+- `customers`: Customer contact information
+- `quotes`: Quotes with line items and pricing
+- `invoices`: Invoices with line items and GST
+- `activity_log`: Employee activity records
+
+## Key Decisions
+1. **Migrated from Expo to React**: Due to Expo Go client instability and deployment limitations, the frontend was rebuilt as a standard React web app using Vite.
+2. **Preserved Backend**: The FastAPI backend remained unchanged during migration.
+3. **Bottom Navigation**: Mobile-friendly bottom tab navigation was maintained in the web version.
